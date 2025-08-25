@@ -1,89 +1,95 @@
-name: techcard_mobile
+name: flutter_intermediate
 description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
+flutter_launcher_icons:
+  image_path: assets/icon/app_icon.png
+  android: true
+  ios: true
+  adaptive_icon_foreground: assets/icon/app_icon.png
+  remove_alpha_ios: true
+  
+# Dart/Flutter最小バージョン: Dart 3系の機能と最新依存関係を前提にするため。
 environment:
-  sdk: ^3.7.2
+  sdk: '>=3.1.0 <4.0.0'
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
 dependencies:
+  # Firestore クエリ/データ取得・保存用。
+  cloud_firestore: ^5.6.11
+  # Firebase Callable Functions 呼び出し用。
+  cloud_functions: ^5.6.1
+  # iOS向けアイコンセット（マテリアル互換）。
+  cupertino_icons: ^1.0.8
+  # 不正アクセス防止のApp Check連携用。
+  firebase_app_check: ^0.3.2+2
+  # Firebase認証（将来的なログイン連携を想定）。
+  firebase_auth: ^5.3.7
+  # Firebase初期化・各サービスの基盤。
+  firebase_core: ^3.10.0
+  # 画像等のオブジェクトストレージ用。
+  firebase_storage: ^12.4.9
+  # Flutter SDK本体。
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
+  # Riverpod本体。状態管理/DIの中心。
+  flutter_riverpod: ^2.4.0
+  # シンプルなトースト通知表示。
+  fluttertoast: ^8.2.8
+  # Freezedモデル用アノテーション（不変データクラス）。
+  freezed_annotation: ^2.4.1
+  # HTTPクライアント（REST等の呼び出しに使用）。
+  http: ^1.4.0
+  # 端末からの画像選択/撮影に使用。
+  image_picker: ^1.0.7
+  # 日付/数値のローカライズ・フォーマット。
+  intl: ^0.18.0
+  # JSONシリアライズ注釈（生成コードで利用）。
+  json_annotation: ^4.9.0
+  # カメラを用いたQR/バーコードスキャン。
+  mobile_scanner: ^6.0.2
+  # QRコードの描画・表示。
+  qr_flutter: ^4.1.0
+  # Riverpodのコード生成アノテーション。
+  riverpod_annotation: ^2.1.0
+  # 端末ローカルのKey-Value保存。
+  shared_preferences: ^2.3.2
+  # 相対時刻（◯分前等）の表示。
+  timeago: ^3.6.0
 
 dev_dependencies:
+  # Freezed/Json/Riverpod等の生成実行用（コマンドを別記）。
+  build_runner: ^2.4.7
+  # アプリアイコン自動生成（iOS/Android）。
+  flutter_launcher_icons: ^0.14.4
+  # Flutter推奨Lintセット。
+  flutter_lints: ^5.0.0
+  # ウィジェットテスト用フレームワーク。
   flutter_test:
     sdk: flutter
+  # Freezedコード生成プラグイン。
+  freezed: ^2.4.6
+  # JsonSerializableコード生成プラグイン。
+  json_serializable: ^6.7.1
+  # ルールセット（pedantic_mono）を採用。
+  pedantic_mono: any
+  # Riverpod Provider生成プラグイン。
+  riverpod_generator: ^2.1.0
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^5.0.0
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
+  # uses-material-design: マテリアルアイコンを利用可能にする設定。
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
+  # assets: 画像/JSON等の静的アセット。原則 assets/ 配下に置き、フォルダ単位で登録。
   # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
+  #   - assets/images/
+  #   - assets/icon/
+  # fonts: カスタムフォントは assets/fonts 配下。family 名は一意・重複禁止。
   # fonts:
-  #   - family: Schyler
+  #   - family: Inter
   #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter-Bold.ttf
   #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+
+# 生成コマンド: dart run build_runner watch --delete-conflicting-outputs

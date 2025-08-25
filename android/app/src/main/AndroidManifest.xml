@@ -1,3 +1,4 @@
+<!-- 権限方針: 今回BluetoothはUIのみで権限追加なし。QRカメラはスキャン用途を明示。 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
         android:label="techcard_mobile"
@@ -31,6 +32,8 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <!-- カメラ権限: QRコードスキャンのために使用（mobile_scanner）。 -->
+    <!-- <uses-permission android:name="android.permission.CAMERA" /> -->
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
