@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import '../providers/global_providers.dart';
-import '../widgets/gold_gradient_button.dart';
+import '../providers/providers.dart';
+import '../widgets/my_card/activities_list.dart';
+import '../widgets/my_card/actions_row.dart';
+import '../widgets/my_card/profile_header_card.dart';
+import '../widgets/my_card/stat_card.dart';
 import '../widgets/pills.dart';
 import '../../domain/models.dart';
+import '../widgets/skills/editable_skills.dart';
+import '../providers/skills/editing_skills_provider.dart';
 
 class MyCardPage extends ConsumerWidget {
   const MyCardPage({super.key});
@@ -57,42 +61,15 @@ class MyCardPage extends ConsumerWidget {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [
-                          const CircleAvatar(
-                              radius: 26, child: Icon(Icons.person_outline)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  isEditing
-                                      ? TextField(
-                                          controller: controllerName,
-                                          decoration: const InputDecoration(
-                                              labelText: '名前'))
-                                      : Text(profile?.name ?? '未設定',
-                                          style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 4),
-                                  isEditing
-                                      ? TextField(
-                                          controller: controllerId,
-                                          decoration: const InputDecoration(
-                                              labelText: 'ユーザーID'))
-                                      : Text('@${profile?.userId ?? 'handle'}',
-                                          style: TextStyle(
-                                              color:
-                                                  Theme.of(context).hintColor)),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                      profile?.role ??
-                                          'Frontend Engineer at Tech Company',
-                                      style: TextStyle(
-                                          color: Theme.of(context).hintColor)),
-                                ]),
-                          ),
-                        ]),
+                        ProfileHeaderContent(
+                          isEditing: isEditing,
+                          controllerName: controllerName,
+                          controllerId: controllerId,
+                          displayName: profile?.name ?? '未設定',
+                          displayUserId: profile?.userId ?? 'handle',
+                          displayRole: profile?.role ??
+                              'Frontend Engineer at Tech Company',
+                        ),
                         const SizedBox(height: 12),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -109,7 +86,7 @@ class MyCardPage extends ConsumerWidget {
                               children: const [
                                 Icon(Icons.local_cafe_outlined, size: 16),
                                 SizedBox(width: 6),
-                                Text('hoge')
+                                Text('ここにGithubアカウントの名前')
                               ]),
                         ),
                         const SizedBox(height: 12),
@@ -123,66 +100,38 @@ class MyCardPage extends ConsumerWidget {
                             : Text(profile?.bio ?? ''),
                         const SizedBox(height: 12),
                         // レイアウト意図: 技術タグはWrapで改行し、タップしやすい余白を確保。
-                        Wrap(
-                            children: (profile?.skills ??
-                                    [
-                                      'React',
-                                      'TypeScript',
-                                      'Next.js',
-                                      'Tailwind CSS'
-                                    ])
-                                .map((s) => SkillChip(label: s))
-                                .toList()),
+                        isEditing
+                            ? EditableSkills(
+                                initial: profile?.skills ?? const [])
+                            : Wrap(
+                                children: (profile?.skills ??
+                                        [
+                                          'React',
+                                          'TypeScript',
+                                          'Next.js',
+                                          'Tailwind CSS'
+                                        ])
+                                    .map((s) => SkillChip(label: s))
+                                    .toList()),
                       ]),
                 ),
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final handle = profile?.userId ?? controllerId.text;
-                      await Clipboard.setData(ClipboardData(text: '@$handle'));
-                      await Fluttertoast.showToast(msg: 'コピーしました');
-                    },
-                    icon: const Icon(Icons.copy_outlined),
-                    label: const Text('IDコピー'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GoldGradientButton(
-                    icon: Icons.qr_code_2,
-                    label: 'QRコード',
-                    onPressed: () {
-                      final id = profile?.userId ?? controllerId.text;
-                      showDialog<void>(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          content:
-                              Column(mainAxisSize: MainAxisSize.min, children: [
-                            QrImageView(
-                                data: id.isEmpty ? 'demo' : id, size: 220),
-                            const SizedBox(height: 8),
-                            Text('@$id'),
-                          ]),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ]),
+              ActionsRow(
+                handleText: profile?.userId ?? controllerId.text,
+                readHandle: () => profile?.userId ?? controllerId.text,
+              ),
               const SizedBox(height: 12),
               Row(children: const [
-                Expanded(child: _StatCard(title: 'つながり', value: '4')),
+                Expanded(child: StatCard(title: 'つながり', value: '4')),
                 SizedBox(width: 12),
-                Expanded(child: _StatCard(title: '今月の交換', value: '3')),
+                Expanded(child: StatCard(title: '今月の交換', value: '3')),
               ]),
               const SizedBox(height: 12),
               const Text('最近の活動',
                   style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const _ActivitiesList(),
+              const ActivitiesList(),
               const SizedBox(height: 24),
               if (isEditing)
                 ElevatedButton(
@@ -191,6 +140,7 @@ class MyCardPage extends ConsumerWidget {
                       name: controllerName.text,
                       userId: controllerId.text,
                       bio: controllerBio.text,
+                      skills: ref.read(editingSkillsProvider),
                     );
                     try {
                       final uc =
@@ -198,6 +148,7 @@ class MyCardPage extends ConsumerWidget {
                       await uc(updated);
                       await Fluttertoast.showToast(msg: '保存しました');
                       ref.invalidate(profileProvider);
+                      ref.read(editingSkillsProvider.notifier).state = const [];
                     } on Exception {
                       await Fluttertoast.showToast(msg: '保存に失敗しました');
                     }
@@ -212,83 +163,4 @@ class MyCardPage extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.title, required this.value});
-  final String title;
-  final String value;
-  @override
-
-  /// 統計数値をカードで表示。
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          Text(title),
-        ]),
-      ),
-    );
-  }
-}
-
-class _ActivityTile extends StatelessWidget {
-  const _ActivityTile(this.text, this.time);
-  final String text;
-  final String time;
-  @override
-
-  /// 活動項目を1行で表示。
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-          width: 10,
-          height: 10,
-          decoration:
-              const BoxDecoration(color: Colors.amber, shape: BoxShape.circle)),
-      title: Text(text),
-      trailing:
-          Text(time, style: TextStyle(color: Theme.of(context).hintColor)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-    );
-  }
-}
-
-class _ActivitiesList extends ConsumerWidget {
-  const _ActivitiesList();
-  String _relative(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}分前';
-    if (diff.inHours < 24) return '${diff.inHours}時間前';
-    return '${diff.inDays}日前';
-  }
-
-  @override
-
-  /// 活動ログを取得し、直近10件を相対時刻で表示。
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activities = ref.watch(activitiesProvider);
-    return activities.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => const SizedBox.shrink(),
-      data: (list) {
-        final sorted = [...list]
-          ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
-        final show = sorted.take(10).toList();
-        if (show.isEmpty) {
-          return Text('活動はまだありません',
-              style: TextStyle(color: Theme.of(context).hintColor));
-        }
-        return Column(
-          children: show
-              .map((a) => _ActivityTile(a.title, _relative(a.occurredAt)))
-              .toList(),
-        );
-      },
-    );
-  }
-}
+// 内部クラスを分離しました（StatCard/ActivitiesList）。

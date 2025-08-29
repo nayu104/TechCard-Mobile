@@ -4,7 +4,7 @@ import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
 import 'pages/settings_page.dart';
-import 'providers/global_providers.dart';
+import 'providers/providers.dart';
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});

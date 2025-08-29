@@ -7,12 +7,14 @@ class GoldGradientButton extends StatelessWidget {
       required this.label,
       this.icon,
       this.onPressed,
-      this.enabled = true});
+      this.enabled = true,
+      this.gradient});
 
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
   final bool enabled;
+  final Gradient? gradient;
 
   @override
 
@@ -23,16 +25,15 @@ class GoldGradientButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: enabled
-            ? const LinearGradient(
-                colors: [
-                  Color(0xFFfde047),
-                  Color(0xFFfacc15),
-                  Color(0xFFf59e0b),
-                  Color(0xFFdc2626)
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
+            ? (gradient ??
+                const LinearGradient(
+                  colors: [
+                    Color(0xFFF59E0B), // amber-600
+                    Color(0xFFFBBF24), // amber-400
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ))
             : null,
         color: enabled
             ? null

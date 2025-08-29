@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/app_shell.dart';
-import '../presentation/providers/global_providers.dart';
+import '../presentation/providers/providers.dart';
 
 class AppRoot extends ConsumerWidget {
   const AppRoot({super.key});
@@ -30,7 +30,6 @@ final _lightTheme = ThemeData(
   useMaterial3: true,
   colorScheme: const ColorScheme.light(
     primary: Color(0xFFf59e0b),
-    surface: Color(0xFFFFFFFF),
   ),
   scaffoldBackgroundColor: const Color(0xFFfafafa),
   cardTheme: const CardThemeData(

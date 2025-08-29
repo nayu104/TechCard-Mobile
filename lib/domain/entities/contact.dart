@@ -1,5 +1,4 @@
-// 用途: 交換相手の名刺情報。必須=id/name/userId/bio（不変）。
-// 一意制約: userIdはアプリ内で一意。整合性はRepositoryで検査。
+// 用途: 交換相手の名刺情報。
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'contact.freezed.dart';
@@ -13,7 +12,7 @@ class Contact with _$Contact {
     required String userId,
     required String bio,
     String? githubUsername,
-    @Default(<String>[]) List<String> skills, // デフォルト空: UI表示簡素化のため
+    @Default(<String>[]) List<String> skills,
     String? company,
     String? role,
     String? avatarUrl,

@@ -1,6 +1,6 @@
-export 'models/activity_item.dart';
-export 'models/contact.dart';
-export 'models/user_profile.dart';
+export 'entities/activity_item.dart';
+export 'entities/contact.dart';
+export 'entities/user_profile.dart';
 
 /// ユーザーIDが英数アンダースコアのみ、かつ空でないかを検証。
 bool isValidUserId(String value) {

@@ -2,9 +2,11 @@
 // watch方針: themeModeはwatchで反映、保存はイベントでpersistTheme。
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/global_providers.dart';
-import '../widgets/pills.dart';
 import '../../domain/models.dart';
+import '../providers/providers.dart';
+import '../widgets/pills.dart';
+import '../widgets/settings/theme_selector.dart';
+import '../widgets/settings/profile_form.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -31,26 +33,16 @@ class SettingsPage extends ConsumerWidget {
                     const Text('外観設定',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Row(children: [
-                      const Text('ダークモード'),
-                      const Spacer(),
-                      DropdownButton<ThemeMode>(
-                        value: themeMode,
-                        items: const [
-                          DropdownMenuItem(
-                              value: ThemeMode.system, child: Text('端末設定')),
-                          DropdownMenuItem(
-                              value: ThemeMode.light, child: Text('ライト')),
-                          DropdownMenuItem(
-                              value: ThemeMode.dark, child: Text('ダーク')),
-                        ],
-                        onChanged: (v) async {
-                          if (v == null) return;
-                          ref.read(themeModeProvider.notifier).state = v;
-                          await persistTheme(ref, v);
-                        },
-                      ),
-                    ])
+                    ThemeSelector(
+                      value: themeMode,
+                      onChanged: (v) async {
+                        if (v == null) {
+                          return;
+                        }
+                        ref.read(themeModeProvider.notifier).state = v;
+                        await persistTheme(ref, v);
+                      },
+                    )
                   ]),
             ),
           ),
@@ -67,92 +59,37 @@ class SettingsPage extends ConsumerWidget {
               final role = TextEditingController(text: profile?.role ?? '');
               final github =
                   TextEditingController(text: profile?.githubUsername ?? '');
-              return Column(children: [
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('基本情報',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          TextField(
-                              controller: name,
-                              decoration:
-                                  const InputDecoration(labelText: '名前')),
-                          TextField(
-                              controller: userId,
-                              decoration:
-                                  const InputDecoration(labelText: 'ユーザーID')),
-                          TextField(
-                              controller: bio,
-                              decoration:
-                                  const InputDecoration(labelText: '自己紹介'),
-                              maxLines: 4),
-                        ]),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('職業情報',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          TextField(
-                              controller: company,
-                              decoration:
-                                  const InputDecoration(labelText: '会社名')),
-                          TextField(
-                              controller: role,
-                              decoration:
-                                  const InputDecoration(labelText: '役職')),
-                          TextField(
-                              controller: github,
-                              decoration: const InputDecoration(
-                                  labelText: 'GitHubユーザー名')),
-                        ]),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!isValidUserId(userId.text) ||
-                        name.text.isEmpty ||
-                        bio.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('ユーザーIDが不正です')));
-                      return;
-                    }
-                    final updated = UserProfile(
-                      name: name.text,
-                      userId: userId.text,
-                      bio: bio.text,
-                      company: company.text.isEmpty ? null : company.text,
-                      role: role.text.isEmpty ? null : role.text,
-                      githubUsername: github.text.isEmpty ? null : github.text,
-                    );
-                    try {
-                      final uc =
-                          await ref.read(updateProfileUseCaseProvider.future);
-                      await uc(updated);
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('保存しました')));
-                      ref.invalidate(profileProvider);
-                    } catch (_) {
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('保存に失敗しました')));
-                    }
-                  },
-                  child: const Text('保存'),
-                )
-              ]);
+              return ProfileForm(
+                name: name,
+                userId: userId,
+                bio: bio,
+                company: company,
+                role: role,
+                github: github,
+                onSave: (updated) async {
+                  if (!isValidUserId(updated.userId) ||
+                      updated.name.isEmpty ||
+                      updated.bio.isEmpty) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('ユーザーIDが不正です')));
+                    return;
+                  }
+                  try {
+                    final uc =
+                        await ref.read(updateProfileUseCaseProvider.future);
+                    await uc(updated);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text('保存しました')));
+                    ref.invalidate(profileProvider);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('保存に失敗しました')));
+                  }
+                },
+              );
             },
           )
         ],

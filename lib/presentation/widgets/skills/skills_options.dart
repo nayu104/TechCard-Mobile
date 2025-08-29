@@ -1,0 +1,20 @@
+/// スキル候補の定数定義。UIから参照される。
+const kSkillOptions = <String>[
+  'React',
+  'TypeScript',
+  'Next.js',
+  'Tailwind CSS',
+  'Flutter',
+  'Dart',
+  'Firebase',
+  'AWS',
+  'GCP',
+  'Node.js',
+  'Python',
+  'Go',
+  'Kotlin',
+  'Swift',
+  'Rust',
+  'Vue',
+  'Nuxt',
+];

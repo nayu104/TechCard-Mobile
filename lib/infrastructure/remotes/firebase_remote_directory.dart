@@ -1,8 +1,8 @@
 // DataSource(Remote): Firestoreからユーザー情報を取得。存在しなければnull。
 // Mapper方針: Data層のフィールド名に追随し、Domain用に最小変換。
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../domain/models.dart';
-import '../domain/repositories.dart';
+import '../../domain/models.dart';
+import '../../domain/repositories.dart';
 
 class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
   FirebaseRemoteDirectory(this.firestore);
