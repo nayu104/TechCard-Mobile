@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../pills.dart';
 
+/// 近接交換（将来のBLE/NFC）のプレースホルダUI。
+/// 実装時はこのカードを差し替える。
 class NearbyPlaceholderCard extends StatelessWidget {
   const NearbyPlaceholderCard({super.key});
 

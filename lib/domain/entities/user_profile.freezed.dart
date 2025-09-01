@@ -20,14 +20,16 @@ UserProfile _$UserProfileFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$UserProfile {
+  String get avatar => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get userId => throw _privateConstructorUsedError;
-  String get bio => throw _privateConstructorUsedError;
-  String? get githubUsername => throw _privateConstructorUsedError;
+  @DateTimeTimestampConverter()
+  DateTime get createdAt => throw _privateConstructorUsedError;
+  String get email => throw _privateConstructorUsedError;
+  List<String> get friendIds => throw _privateConstructorUsedError;
+  String? get github => throw _privateConstructorUsedError;
+  String get message => throw _privateConstructorUsedError;
   List<String> get skills => throw _privateConstructorUsedError;
-  String? get company => throw _privateConstructorUsedError;
-  String? get role => throw _privateConstructorUsedError;
-  String? get avatarUrl => throw _privateConstructorUsedError;
 
   /// Serializes this UserProfile to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -46,14 +48,15 @@ abstract class $UserProfileCopyWith<$Res> {
       _$UserProfileCopyWithImpl<$Res, UserProfile>;
   @useResult
   $Res call(
-      {String name,
+      {String avatar,
+      String name,
       String userId,
-      String bio,
-      String? githubUsername,
-      List<String> skills,
-      String? company,
-      String? role,
-      String? avatarUrl});
+      @DateTimeTimestampConverter() DateTime createdAt,
+      String email,
+      List<String> friendIds,
+      String? github,
+      String message,
+      List<String> skills});
 }
 
 /// @nodoc
@@ -71,16 +74,21 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? avatar = null,
     Object? name = null,
     Object? userId = null,
-    Object? bio = null,
-    Object? githubUsername = freezed,
+    Object? createdAt = null,
+    Object? email = null,
+    Object? friendIds = null,
+    Object? github = freezed,
+    Object? message = null,
     Object? skills = null,
-    Object? company = freezed,
-    Object? role = freezed,
-    Object? avatarUrl = freezed,
   }) {
     return _then(_value.copyWith(
+      avatar: null == avatar
+          ? _value.avatar
+          : avatar // ignore: cast_nullable_to_non_nullable
+              as String,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -89,30 +97,30 @@ class _$UserProfileCopyWithImpl<$Res, $Val extends UserProfile>
           ? _value.userId
           : userId // ignore: cast_nullable_to_non_nullable
               as String,
-      bio: null == bio
-          ? _value.bio
-          : bio // ignore: cast_nullable_to_non_nullable
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      email: null == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
               as String,
-      githubUsername: freezed == githubUsername
-          ? _value.githubUsername
-          : githubUsername // ignore: cast_nullable_to_non_nullable
+      friendIds: null == friendIds
+          ? _value.friendIds
+          : friendIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      github: freezed == github
+          ? _value.github
+          : github // ignore: cast_nullable_to_non_nullable
               as String?,
+      message: null == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String,
       skills: null == skills
           ? _value.skills
           : skills // ignore: cast_nullable_to_non_nullable
               as List<String>,
-      company: freezed == company
-          ? _value.company
-          : company // ignore: cast_nullable_to_non_nullable
-              as String?,
-      role: freezed == role
-          ? _value.role
-          : role // ignore: cast_nullable_to_non_nullable
-              as String?,
-      avatarUrl: freezed == avatarUrl
-          ? _value.avatarUrl
-          : avatarUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
     ) as $Val);
   }
 }
@@ -126,14 +134,15 @@ abstract class _$$UserProfileImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String name,
+      {String avatar,
+      String name,
       String userId,
-      String bio,
-      String? githubUsername,
-      List<String> skills,
-      String? company,
-      String? role,
-      String? avatarUrl});
+      @DateTimeTimestampConverter() DateTime createdAt,
+      String email,
+      List<String> friendIds,
+      String? github,
+      String message,
+      List<String> skills});
 }
 
 /// @nodoc
@@ -149,16 +158,21 @@ class __$$UserProfileImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? avatar = null,
     Object? name = null,
     Object? userId = null,
-    Object? bio = null,
-    Object? githubUsername = freezed,
+    Object? createdAt = null,
+    Object? email = null,
+    Object? friendIds = null,
+    Object? github = freezed,
+    Object? message = null,
     Object? skills = null,
-    Object? company = freezed,
-    Object? role = freezed,
-    Object? avatarUrl = freezed,
   }) {
     return _then(_$UserProfileImpl(
+      avatar: null == avatar
+          ? _value.avatar
+          : avatar // ignore: cast_nullable_to_non_nullable
+              as String,
       name: null == name
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -167,30 +181,30 @@ class __$$UserProfileImplCopyWithImpl<$Res>
           ? _value.userId
           : userId // ignore: cast_nullable_to_non_nullable
               as String,
-      bio: null == bio
-          ? _value.bio
-          : bio // ignore: cast_nullable_to_non_nullable
+      createdAt: null == createdAt
+          ? _value.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+      email: null == email
+          ? _value.email
+          : email // ignore: cast_nullable_to_non_nullable
               as String,
-      githubUsername: freezed == githubUsername
-          ? _value.githubUsername
-          : githubUsername // ignore: cast_nullable_to_non_nullable
+      friendIds: null == friendIds
+          ? _value._friendIds
+          : friendIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      github: freezed == github
+          ? _value.github
+          : github // ignore: cast_nullable_to_non_nullable
               as String?,
+      message: null == message
+          ? _value.message
+          : message // ignore: cast_nullable_to_non_nullable
+              as String,
       skills: null == skills
           ? _value._skills
           : skills // ignore: cast_nullable_to_non_nullable
               as List<String>,
-      company: freezed == company
-          ? _value.company
-          : company // ignore: cast_nullable_to_non_nullable
-              as String?,
-      role: freezed == role
-          ? _value.role
-          : role // ignore: cast_nullable_to_non_nullable
-              as String?,
-      avatarUrl: freezed == avatarUrl
-          ? _value.avatarUrl
-          : avatarUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
     ));
   }
 }
@@ -199,27 +213,46 @@ class __$$UserProfileImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$UserProfileImpl implements _UserProfile {
   const _$UserProfileImpl(
-      {required this.name,
+      {required this.avatar,
+      required this.name,
       required this.userId,
-      required this.bio,
-      this.githubUsername,
-      final List<String> skills = const <String>[],
-      this.company,
-      this.role,
-      this.avatarUrl})
-      : _skills = skills;
+      @DateTimeTimestampConverter() required this.createdAt,
+      required this.email,
+      final List<String> friendIds = const <String>[],
+      this.github,
+      this.message = '',
+      final List<String> skills = const <String>[]})
+      : _friendIds = friendIds,
+        _skills = skills;
 
   factory _$UserProfileImpl.fromJson(Map<String, dynamic> json) =>
       _$$UserProfileImplFromJson(json);
 
   @override
+  final String avatar;
+  @override
   final String name;
   @override
   final String userId;
   @override
-  final String bio;
+  @DateTimeTimestampConverter()
+  final DateTime createdAt;
   @override
-  final String? githubUsername;
+  final String email;
+  final List<String> _friendIds;
+  @override
+  @JsonKey()
+  List<String> get friendIds {
+    if (_friendIds is EqualUnmodifiableListView) return _friendIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_friendIds);
+  }
+
+  @override
+  final String? github;
+  @override
+  @JsonKey()
+  final String message;
   final List<String> _skills;
   @override
   @JsonKey()
@@ -230,15 +263,8 @@ class _$UserProfileImpl implements _UserProfile {
   }
 
   @override
-  final String? company;
-  @override
-  final String? role;
-  @override
-  final String? avatarUrl;
-
-  @override
   String toString() {
-    return 'UserProfile(name: $name, userId: $userId, bio: $bio, githubUsername: $githubUsername, skills: $skills, company: $company, role: $role, avatarUrl: $avatarUrl)';
+    return 'UserProfile(avatar: $avatar, name: $name, userId: $userId, createdAt: $createdAt, email: $email, friendIds: $friendIds, github: $github, message: $message, skills: $skills)';
   }
 
   @override
@@ -246,30 +272,32 @@ class _$UserProfileImpl implements _UserProfile {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$UserProfileImpl &&
+            (identical(other.avatar, avatar) || other.avatar == avatar) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.userId, userId) || other.userId == userId) &&
-            (identical(other.bio, bio) || other.bio == bio) &&
-            (identical(other.githubUsername, githubUsername) ||
-                other.githubUsername == githubUsername) &&
-            const DeepCollectionEquality().equals(other._skills, _skills) &&
-            (identical(other.company, company) || other.company == company) &&
-            (identical(other.role, role) || other.role == role) &&
-            (identical(other.avatarUrl, avatarUrl) ||
-                other.avatarUrl == avatarUrl));
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt) &&
+            (identical(other.email, email) || other.email == email) &&
+            const DeepCollectionEquality()
+                .equals(other._friendIds, _friendIds) &&
+            (identical(other.github, github) || other.github == github) &&
+            (identical(other.message, message) || other.message == message) &&
+            const DeepCollectionEquality().equals(other._skills, _skills));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      avatar,
       name,
       userId,
-      bio,
-      githubUsername,
-      const DeepCollectionEquality().hash(_skills),
-      company,
-      role,
-      avatarUrl);
+      createdAt,
+      email,
+      const DeepCollectionEquality().hash(_friendIds),
+      github,
+      message,
+      const DeepCollectionEquality().hash(_skills));
 
   /// Create a copy of UserProfile
   /// with the given fields replaced by the non-null parameter values.
@@ -289,34 +317,38 @@ class _$UserProfileImpl implements _UserProfile {
 
 abstract class _UserProfile implements UserProfile {
   const factory _UserProfile(
-      {required final String name,
+      {required final String avatar,
+      required final String name,
       required final String userId,
-      required final String bio,
-      final String? githubUsername,
-      final List<String> skills,
-      final String? company,
-      final String? role,
-      final String? avatarUrl}) = _$UserProfileImpl;
+      @DateTimeTimestampConverter() required final DateTime createdAt,
+      required final String email,
+      final List<String> friendIds,
+      final String? github,
+      final String message,
+      final List<String> skills}) = _$UserProfileImpl;
 
   factory _UserProfile.fromJson(Map<String, dynamic> json) =
       _$UserProfileImpl.fromJson;
 
   @override
+  String get avatar;
+  @override
   String get name;
   @override
   String get userId;
   @override
-  String get bio;
+  @DateTimeTimestampConverter()
+  DateTime get createdAt;
   @override
-  String? get githubUsername;
+  String get email;
+  @override
+  List<String> get friendIds;
+  @override
+  String? get github;
+  @override
+  String get message;
   @override
   List<String> get skills;
-  @override
-  String? get company;
-  @override
-  String? get role;
-  @override
-  String? get avatarUrl;
 
   /// Create a copy of UserProfile
   /// with the given fields replaced by the non-null parameter values.

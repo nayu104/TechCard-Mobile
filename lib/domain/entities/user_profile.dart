@@ -1,5 +1,16 @@
-// 用途: 自分の名刺プロフィール。
+// 役割: 自分の名刺プロフィールを表すドメインモデル。
+// 用途: マイカード表示/編集、交換データに埋め込む自分側の情報として利用する。
+// スキーマ（Firestore/JSON）:
+// - avatar: String（GitHub等のアバターURL）
+// - userId: String（@handle）
+// - createdAt: Timestamp <-> DateTime（コンバータで相互変換）
+// - email: String
+// - friend_ids: String[]（Dart側では friendIds にマップ）
+// - github: String?（プロフィールURLやユーザー名）
+// - message: String（ひとこと、最大50文字想定）
+// - skills: String[]
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../converters/times_tamp_converter.dart';
 
 part 'user_profile.freezed.dart';
 part 'user_profile.g.dart';
@@ -7,14 +18,15 @@ part 'user_profile.g.dart';
 @freezed
 class UserProfile with _$UserProfile {
   const factory UserProfile({
+    required String avatar,
     required String name,
     required String userId,
-    required String bio,
-    String? githubUsername,
+    @DateTimeTimestampConverter() required DateTime createdAt,
+    required String email,
+    @Default(<String>[]) List<String> friendIds,
+    String? github,
+    @Default('') String message,
     @Default(<String>[]) List<String> skills,
-    String? company,
-    String? role,
-    String? avatarUrl,
   }) = _UserProfile;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) =>

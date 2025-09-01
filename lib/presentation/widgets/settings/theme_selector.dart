@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// テーマモードを選択するドロップダウン。
+/// valueに現在値、onChangedで反映先を受け取る。
 class ThemeSelector extends StatelessWidget {
   const ThemeSelector(
       {super.key, required this.value, required this.onChanged});

@@ -3,11 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
+import 'package:flutter/services.dart';
 import 'pages/settings_page.dart';
 import 'providers/providers.dart';
 
+/// アプリのシェル。
+/// ボトムナビゲーションとタブごとのページ（IndexedStack）を束ねる。
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
+
+  //ボタンを押すと振動するようにする関数
+  void vibrate() {
+    HapticFeedback.lightImpact(); // iOS/Android両対応の軽いバイブ
+  }
 
   @override
 
@@ -31,6 +39,7 @@ class AppShell extends ConsumerWidget {
         /// タブ選択時にcurrentIndexを更新。
         onDestinationSelected: (value) {
           ref.read(bottomNavProvider.notifier).state = value;
+          vibrate();
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.badge_outlined), label: '名刺'),

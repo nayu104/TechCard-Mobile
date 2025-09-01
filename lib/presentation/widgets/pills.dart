@@ -56,7 +56,16 @@ class SkillChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       margin: const EdgeInsets.only(right: 8, bottom: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1e293b) : const Color(0xFFF3F4F6),
+        gradient: LinearGradient(
+            colors: isDark
+                ? [
+                    const Color.fromARGB(36, 64, 163, 255),
+                    const Color.fromARGB(255, 64, 163, 255),
+                  ]
+                : [
+                    const Color.fromARGB(101, 64, 93, 255),
+                    const Color.fromARGB(255, 64, 163, 255),
+                  ]),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(label,
@@ -65,3 +74,6 @@ class SkillChip extends StatelessWidget {
     );
   }
 }
+
+// Color.fromARGB(95, 64, 163, 255),
+//Color.fromARGB(255, 82, 220, 255)

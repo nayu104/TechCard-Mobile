@@ -5,6 +5,8 @@ import '../../providers/providers.dart';
 import 'activity_tile.dart';
 
 /// 活動ログを取得し、直近10件を相対時刻で表示。
+/// Repository経由の`activitiesProvider`をwatchし、
+/// 空ならプレースホルダ、あれば最新順に最大10件を並べる。
 class ActivitiesList extends ConsumerWidget {
   const ActivitiesList({super.key});
 

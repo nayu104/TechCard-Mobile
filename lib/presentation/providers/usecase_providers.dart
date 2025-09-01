@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/models.dart';
-import '../../domain/use_cases.dart';
-import 'data_providers.dart';
+import 'package:techcard_mobile/domain/models.dart';
+import 'package:techcard_mobile/domain/use_cases.dart';
+import 'package:techcard_mobile/presentation/providers/data_providers.dart';
 
 /// プロフィール取得UseCaseの提供。
 final getProfileUseCaseProvider =

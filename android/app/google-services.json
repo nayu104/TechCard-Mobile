@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "746502358122",
+    "project_id": "electronicbusinesscard-f3372",
+    "storage_bucket": "electronicbusinesscard-f3372.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:746502358122:android:7a669b1e61505255d2f613",
+        "android_client_info": {
+          "package_name": "com.example.techcard_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeJLheB8Z2gjs-6CCSSc3FqLNghBGzqNY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:746502358122:android:77bedab8946c9884d2f613",
+        "android_client_info": {
+          "package_name": "com.example.todos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeJLheB8Z2gjs-6CCSSc3FqLNghBGzqNY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

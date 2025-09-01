@@ -17,9 +17,12 @@ class UpdateProfileUseCase {
 
   /// プロフィールを検証し保存。成功時に活動ログを追記。
   Future<void> call(UserProfile profile) async {
-    // 入力検証: name/bioは非空、userIdは形式チェック。
+    // ADDED COMMENT: 入力検証
+    // - name: 空禁止（表示名として必須）
+    // - message: ひとことは50文字以内（空は許容、要件に応じて調整可）
+    // - userId: 英数字とアンダースコアのみ
     if (profile.name.isEmpty ||
-        profile.bio.isEmpty ||
+        profile.message.length > 50 ||
         !isValidUserId(profile.userId)) {
       throw ArgumentError('invalid');
     }

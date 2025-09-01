@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// 活動項目を1行で表示。
+/// - text: 活動タイトル
+/// - time: 相対時刻などのサブ情報
 class ActivityTile extends StatelessWidget {
   const ActivityTile(this.text, this.time, {super.key});
   final String text;

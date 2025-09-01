@@ -5,6 +5,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../../providers/providers.dart';
 import '../gold_gradient_button.dart';
 
+/// ユーザーIDを入力して名刺交換を行うフォーム。
+/// 入力→サービス呼び出し→結果をトースト表示し、成功時は一覧をinvalidate。
 class ExchangeForm extends ConsumerWidget {
   const ExchangeForm({super.key});
 

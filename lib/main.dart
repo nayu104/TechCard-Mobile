@@ -3,15 +3,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'app/app_root.dart';
 
 /// アプリのエントリポイント。
 /// Env/プラグイン初期化 → DIルート(ProviderScope) → AppRoot起動 の順で実行。
 Future<void> main() async {
-  // Env読込やプラグイン初期化が必要な場合に備え、先に初期化。
+  // アプリ起動前の初期化。プラグイン利用やFirebase初期化のために必須。
   WidgetsFlutterBinding.ensureInitialized();
-  // Firebase初期化（各プラットフォームの設定ファイルを利用）
-  await Firebase.initializeApp();
-  // DIのルート（ProviderScope）を用意してからMaterialAppを起動。
+
+  // Firebaseの初期化。
+  // flutterfire configure により生成された firebase_options.dart を使用し、
+  // 端末プラットフォームに応じた設定で初期化する。
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Riverpodのルート（ProviderScope）配下にMaterialApp(AppRoot)を配置して起動。
   runApp(const ProviderScope(child: AppRoot()));
 }

@@ -5,6 +5,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../providers/providers.dart';
 
+/// QRコードをスキャンして名刺交換を行うセクション。
+/// MobileScannerで検出→最初の値を採用し、結果をトースト表示。
 class QrScanCard extends ConsumerWidget {
   const QrScanCard({super.key});
 

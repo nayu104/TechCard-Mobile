@@ -5,6 +5,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import '../gold_gradient_button.dart';
 import '../common/qr_dialog.dart';
 
+/// 名刺アクション群（IDコピー/QR表示）を横並びで提供する行。
+/// - 左: ハンドル文字列をクリップボードへコピー
+/// - 右: GoldGradientButtonでQRダイアログを開く
 class ActionsRow extends StatelessWidget {
   const ActionsRow({
     super.key,

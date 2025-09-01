@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// 名刺が0件のときのプレースホルダ。交換画面への誘導ボタンを持つ。
 class ContactsEmptyState extends StatelessWidget {
   const ContactsEmptyState({super.key, required this.onTapExchange});
   final VoidCallback onTapExchange;

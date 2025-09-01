@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// 統計数値をカードで表示。
+/// - title: ラベル
+/// - value: 数値文字列（強調表示）
 class StatCard extends StatelessWidget {
   const StatCard({super.key, required this.title, required this.value});
   final String title;

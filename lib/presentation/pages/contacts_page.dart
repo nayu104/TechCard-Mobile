@@ -7,6 +7,8 @@ import '../widgets/contacts/contact_list_item.dart';
 import '../widgets/contacts/empty_state.dart';
 import '../widgets/pills.dart';
 
+/// 名刺一覧ページ。
+/// 0件時のプレースホルダと、展開可能な連絡先カードのリストを表示する。
 class ContactsPage extends ConsumerWidget {
   const ContactsPage({super.key});
 
@@ -16,9 +18,6 @@ class ContactsPage extends ConsumerWidget {
     final contactsAsync = ref.watch(contactsProvider);
     final expanded = <String, bool>{};
     return Scaffold(
-      appBar: AppBar(title: const Text('名刺一覧'), actions: const [
-        Padding(padding: EdgeInsets.only(right: 12), child: BetaPill())
-      ]),
       body: contactsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('読み込みに失敗しました')),

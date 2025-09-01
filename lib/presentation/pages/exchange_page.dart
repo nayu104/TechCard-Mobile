@@ -7,6 +7,8 @@ import '../widgets/exchange/exchange_form.dart';
 import '../widgets/exchange/qr_scan_card.dart';
 import '../widgets/exchange/nearby_placeholder_card.dart';
 
+/// 名刺交換ページ。
+/// 入力交換フォーム、QRスキャン交換、近接交換プレースホルダの3セクションから構成。
 class ExchangePage extends ConsumerStatefulWidget {
   const ExchangePage({super.key});
   @override
@@ -20,9 +22,6 @@ class _ExchangePageState extends ConsumerState<ExchangePage> {
   Widget build(BuildContext context) {
     // Exchange form/scan widgets handle providers internally.
     return Scaffold(
-      appBar: AppBar(title: const Text('名刺交換'), actions: const [
-        Padding(padding: EdgeInsets.only(right: 12), child: BetaPill())
-      ]),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_intermediate/app/app_root.dart';
+import 'package:techcard_mobile/app/app_root.dart';
 
 void main() {
   // Given: ProviderScope配下でAppRootを起動
