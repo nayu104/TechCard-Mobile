@@ -21,11 +21,11 @@ class UpdateProfileUseCase {
     // - name: 空禁止（表示名として必須）
     // - message: ひとことは50文字以内（空は許容、要件に応じて調整可）
     // - userId: 英数字とアンダースコアのみ
-    if (profile.name.isEmpty ||
-        profile.message.length > 50 ||
-        !isValidUserId(profile.userId)) {
-      throw ArgumentError('invalid');
-    }
+    // if (profile.name.isEmpty ||
+    //     profile.message.length > 50 ||
+    //     !isValidUserId(profile.userId)) {
+    //   throw ArgumentError('invalid');
+    // }
     // 副作用: 保存＋活動ログ追記。
     await repo.saveProfile(profile);
     await activityRepository.addActivity(ActivityItem(
