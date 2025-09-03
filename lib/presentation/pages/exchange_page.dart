@@ -2,10 +2,10 @@
 // watch方針: サービスはread/イベント駆動、UIは最小限のwatch。
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/pills.dart';
+
 import '../widgets/exchange/exchange_form.dart';
-import '../widgets/exchange/qr_scan_card.dart';
 import '../widgets/exchange/nearby_placeholder_card.dart';
+import '../widgets/exchange/qr_scan_card.dart';
 
 /// 名刺交換ページ。
 /// 入力交換フォーム、QRスキャン交換、近接交換プレースホルダの3セクションから構成。
@@ -24,19 +24,19 @@ class _ExchangePageState extends ConsumerState<ExchangePage> {
     return Scaffold(
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [
+        children: const [
           Card(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16))),
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: const ExchangeForm(),
+              padding: EdgeInsets.all(16),
+              child: ExchangeForm(),
             ),
           ),
-          const SizedBox(height: 12),
-          const QrScanCard(),
-          const SizedBox(height: 12),
-          const NearbyPlaceholderCard(),
+          SizedBox(height: 12),
+          QrScanCard(),
+          SizedBox(height: 12),
+          NearbyPlaceholderCard(),
         ],
       ),
     );

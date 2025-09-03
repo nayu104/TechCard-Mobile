@@ -30,8 +30,8 @@ class ExchangeService {
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         name: 'Alice Johnson',
         userId: 'alice_backend',
-        bio:
-            'バックエンドエンジニアとしてNode.jsとPythonでAPI開発をしています。データベース設計からクラウドインフラまで幅広く担当しています。',
+        bio: 'バックエンドエンジニアとしてNode.jsとPythonでAPI開発をしています。'
+            'データベース設計からクラウドインフラまで幅広く担当しています。',
         skills: const [
           'Node.js',
           'Python',
@@ -45,12 +45,12 @@ class ExchangeService {
       );
     }
     return Contact(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        name: userId,
-        userId: userId,
-        bio: '');
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      name: userId,
+      userId: userId,
+      bio: '',
+    );
   }
 }
 
-final exchangeServiceProvider =
-    Provider<ExchangeService>((ref) => ExchangeService(ref));
+final exchangeServiceProvider = Provider<ExchangeService>(ExchangeService.new);

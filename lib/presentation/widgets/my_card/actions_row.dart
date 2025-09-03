@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import '../gold_gradient_button.dart';
 import '../common/qr_dialog.dart';
+import '../gold_gradient_button.dart';
 
 /// 名刺アクション群（IDコピー/QR表示）を横並びで提供する行。
 /// - 左: ハンドル文字列をクリップボードへコピー

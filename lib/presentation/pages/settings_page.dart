@@ -15,7 +15,6 @@ class SettingsPage extends ConsumerWidget {
   /// テーマ設定の切替とプロフィール詳細の編集フォームを描画。
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    final profileAsync = ref.watch(profileProvider);
     return Scaffold(
       body: ListView(
         padding: const EdgeInsets.all(16),

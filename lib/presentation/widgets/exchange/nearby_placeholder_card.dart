@@ -11,11 +11,11 @@ class NearbyPlaceholderCard extends StatelessWidget {
     return Column(children: [
       Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        child: const Padding(
+          padding: EdgeInsets.all(16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
+            children: [
               Text('近くのユーザー'),
               DevPill(),
             ],

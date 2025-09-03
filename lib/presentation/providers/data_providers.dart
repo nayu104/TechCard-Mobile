@@ -1,11 +1,11 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:techcard_mobile/domain/repositories.dart';
 import 'package:techcard_mobile/infrastructure/datasources/local_data_source.dart';
 import 'package:techcard_mobile/infrastructure/remotes/firebase_remote_directory.dart';
 import 'package:techcard_mobile/infrastructure/repositories/repositories_impl.dart';
-import 'package:techcard_mobile/domain/repositories.dart';
 
 /// SharedPreferencesのインスタンスを提供。
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {

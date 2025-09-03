@@ -15,11 +15,8 @@ class ExchangeForm extends ConsumerWidget {
     final exchange = ref.watch(exchangeServiceProvider);
     final controller = TextEditingController();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: const [
-        Icon(Icons.search),
-        SizedBox(width: 8),
-        Text('ユーザーID検索')
-      ]),
+      const Row(
+          children: [Icon(Icons.search), SizedBox(width: 8), Text('ユーザーID検索')]),
       const SizedBox(height: 12),
       TextField(
           controller: controller,
@@ -32,7 +29,9 @@ class ExchangeForm extends ConsumerWidget {
           final result =
               await exchange.exchangeByUserId(controller.text.trim());
           await Fluttertoast.showToast(msg: result.message);
-          if (result.added) ref.invalidate(contactsProvider);
+          if (result.added) {
+            ref.invalidate(contactsProvider);
+          }
         },
       ),
     ]);

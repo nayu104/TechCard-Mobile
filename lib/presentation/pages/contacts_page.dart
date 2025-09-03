@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../widgets/contacts/contact_list_item.dart';
 import '../widgets/contacts/empty_state.dart';
-import '../widgets/pills.dart';
+// ...existing code...
 
 /// 名刺一覧ページ。
 /// 0件時のプレースホルダと、展開可能な連絡先カードのリストを表示する。
@@ -20,7 +20,7 @@ class ContactsPage extends ConsumerWidget {
     return Scaffold(
       body: contactsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('読み込みに失敗しました')),
+        error: (e, _) => const Center(child: Text('読み込みに失敗しました')),
         data: (contacts) {
           if (contacts.isEmpty) {
             return ContactsEmptyState(

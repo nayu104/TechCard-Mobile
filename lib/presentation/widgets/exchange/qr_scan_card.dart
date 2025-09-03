@@ -18,7 +18,7 @@ class QrScanCard extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: const [
+          const Row(children: [
             Icon(Icons.qr_code_scanner),
             SizedBox(width: 8),
             Text('QRコード交換')
@@ -38,7 +38,9 @@ class QrScanCard extends ConsumerWidget {
                     child: MobileScanner(onDetect: (barcodes) async {
                       for (final bc in barcodes.barcodes) {
                         final raw = bc.rawValue;
-                        if (raw == null) continue;
+                        if (raw == null) {
+                          continue;
+                        }
                         nav.pop();
                         final result = await exchange.exchangeByUserId(raw);
                         await Fluttertoast.showToast(msg: result.message);

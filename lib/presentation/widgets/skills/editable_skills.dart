@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:techcard_mobile/presentation/widgets/custom_text_field.dart';
-import 'package:techcard_mobile/utils/responsive_text.dart';
 
 import '../../providers/skills/editing_skills_provider.dart';
 import 'skills_options.dart';
@@ -23,7 +22,7 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
   final _searchController = TextEditingController();
 
   /// 検索クエリの現在値を保持する状態変数。
-  String _searchQuery = '';
+  var _searchQuery = '';
 
   // --- Lifecycle Hooks ---
   @override
@@ -59,7 +58,9 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
   /// スキルをRiverpodの状態リストに追加する。重複は許さない。
   void _addSkill(String skill) {
     final text = skill.trim();
-    if (text.isEmpty) return; // 空白文字は追加しない
+    if (text.isEmpty) {
+      return; // 空白文字は追加しない
+    }
 
     final skills = ref.read(editingSkillsProvider);
     if (skills.length > 4) {
@@ -99,10 +100,10 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
     // --- Widget Layout ---
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8),
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -111,12 +112,12 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
               CustomTextField(
                 controller: _searchController,
                 labelText: 'スキルを検索して追加する',
-                prefixIcon: Icon(Icons.search, size: 20),
+                prefixIcon: const Icon(Icons.search, size: 20),
                 // 入力がある時だけクリアボタンを表示する
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
-                        onPressed: () => _searchController.clear(),
+                        onPressed: _searchController.clear,
                       )
                     : null,
               ),
@@ -124,12 +125,12 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
 
               // --- 2. 選択済みスキル ---
 
-              if (selectedSkills.isEmpty == false)
+              if (selectedSkills.isNotEmpty)
                 const Text('追加されたスキル',
                     style: TextStyle(fontWeight: FontWeight.bold)),
 
               // 横スクロールするリストで選択済みスキルを表示
-              if (selectedSkills.isEmpty == false)
+              if (selectedSkills.isNotEmpty)
                 SizedBox(
                   height: 38,
                   child: ListView.separated(
@@ -140,20 +141,17 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
                       return InputChip(
                         label: Text(skill),
                         padding: const EdgeInsets.symmetric(
-                            vertical: 2.0, horizontal: 4.0),
+                            vertical: 2, horizontal: 4),
                         onDeleted: () => _removeSkill(skill),
                         backgroundColor: Theme.of(context)
                             .colorScheme
                             .secondaryContainer
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                         deleteIconColor:
                             Theme.of(context).colorScheme.onSecondaryContainer,
-                        deleteIcon: Icon(
+                        deleteIcon: const Icon(
                           Icons.cancel, // デフォルトで使用されるアイコン
-                          size: 14.0, // ここでサイズを指定
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSecondaryContainer,
+                          size: 14, // ここでサイズを指定（double→int）
                         ),
                         labelStyle: TextStyle(
                           color: Theme.of(context)
@@ -164,7 +162,7 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
                           color: Theme.of(context)
                               .colorScheme
                               .outline
-                              .withOpacity(0.2),
+                              .withValues(alpha: 0.2),
                         ),
                       );
                     },
@@ -181,13 +179,13 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
               // 候補エリアが長くなりすぎないように最大高を設定し、スクロール可能にする
 
               Wrap(
-                spacing: 8.0,
-                runSpacing: 4.0,
+                spacing: 8,
+                runSpacing: 4,
                 children: availableOptions
                     .map((opt) => ActionChip(
                           label: Text(opt),
                           padding: const EdgeInsets.symmetric(
-                              vertical: 2.0, horizontal: 4.0),
+                              vertical: 2, horizontal: 4),
                           onPressed: () {
                             _addSkill(opt);
                             _searchController.clear(); // UX向上のため、選択後に検索欄をクリア

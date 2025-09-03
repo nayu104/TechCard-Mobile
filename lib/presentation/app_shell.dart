@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
-import 'package:flutter/services.dart';
 import 'pages/settings_page.dart';
 import 'providers/providers.dart';
 //import 'dart:io'; // プラットフォーム判定用
