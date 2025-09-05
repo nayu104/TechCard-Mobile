@@ -1,0 +1,32 @@
+firebase/firestore.rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // プライベートマイカード：本人のみアクセス可能
+    match /users_v01/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    
+    // 公開プロフィール：読み取りは誰でも、書き込みは所有者のみ
+    match /public_profiles/{userId} {
+      allow read: if true;
+      // ドキュメントID と userId フィールドの一致も強制（なりすまし防止）
+      allow create, update, delete: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.id == request.resource.data.userId;
+    }
+    
+    // userId 予約テーブル：重複発行を防ぐ
+    match /user_ids/{userId} {
+      allow read: if true;
+      // 新規作成は未存在時のみ（重複防止）
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && !exists(/databases/$(database)/documents/user_ids/$(userId));
+      allow update, delete: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+    }
+  }
+}

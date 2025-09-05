@@ -4,8 +4,8 @@
 import 'models.dart';
 
 abstract class ProfileRepository {
-  Future<UserProfile?> getProfile(); // I/O: Local KV。失敗: デコードエラー等は例外。
-  Future<void> saveProfile(UserProfile profile); // I/O: Local KV書込。失敗: 例外。
+  Future<MyProfile?> getProfile(); // I/O: Local KV。失敗: デコードエラー等は例外。
+  Future<void> saveProfile(MyProfile profile); // I/O: Local KV書込。失敗: 例外。
 }
 
 abstract class ContactsRepository {

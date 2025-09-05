@@ -308,7 +308,7 @@ class MyCardPage extends ConsumerWidget {
   // プロフィール保存メソッド
   Future<void> _saveProfile(
       WidgetRef ref,
-      UserProfile? profile,
+      MyProfile? profile,
       TextEditingController controllerName,
       TextEditingController controllerId,
       TextEditingController controllerMessage) async {
@@ -316,7 +316,7 @@ class MyCardPage extends ConsumerWidget {
       return;
     }
 
-    final updated = UserProfile(
+    final updated = MyProfile(
       avatar: profile.avatar.isNotEmpty
           ? profile.avatar
           : ((_extractGithubUsername(controllerId.text) != null)
@@ -330,6 +330,7 @@ class MyCardPage extends ConsumerWidget {
       github: _normalizeGithub(controllerId.text),
       message: controllerMessage.text,
       skills: ref.read(editingSkillsProvider),
+      updatedAt: DateTime.now(), // 更新日時を現在に設定
     );
 
     try {

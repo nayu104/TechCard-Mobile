@@ -42,7 +42,7 @@ final getActivitiesUseCaseProvider =
 });
 
 /// プロフィール状態。nullは未設定を示す。
-final profileProvider = FutureProvider<UserProfile?>((ref) async {
+final profileProvider = FutureProvider<MyProfile?>((ref) async {
   final uc = await ref.watch(getProfileUseCaseProvider.future);
   return uc();
 });

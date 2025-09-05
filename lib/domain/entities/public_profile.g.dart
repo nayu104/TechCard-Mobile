@@ -1,45 +1,36 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_profile.dart';
+part of 'public_profile.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$MyProfileImpl _$$MyProfileImplFromJson(Map<String, dynamic> json) =>
-    _$MyProfileImpl(
-      avatar: json['avatar'] as String,
+_$PublicProfileImpl _$$PublicProfileImplFromJson(Map<String, dynamic> json) =>
+    _$PublicProfileImpl(
       name: json['name'] as String,
       userId: json['userId'] as String,
-      email: json['email'] as String,
-      github: json['github'] as String?,
+      avatar: json['avatar'] as String? ?? '',
       message: json['message'] as String? ?? '',
-      friendIds: (json['friendIds'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const <String>[],
       skills: (json['skills'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const <String>[],
-      createdAt: const DateTimeTimestampConverter()
-          .fromJson(json['createdAt'] as Timestamp),
+      github: json['github'] as String?,
+      ownerUid: json['ownerUid'] as String,
       updatedAt: const DateTimeTimestampConverter()
           .fromJson(json['updatedAt'] as Timestamp),
     );
 
-Map<String, dynamic> _$$MyProfileImplToJson(_$MyProfileImpl instance) =>
+Map<String, dynamic> _$$PublicProfileImplToJson(_$PublicProfileImpl instance) =>
     <String, dynamic>{
-      'avatar': instance.avatar,
       'name': instance.name,
       'userId': instance.userId,
-      'email': instance.email,
-      'github': instance.github,
+      'avatar': instance.avatar,
       'message': instance.message,
-      'friendIds': instance.friendIds,
       'skills': instance.skills,
-      'createdAt':
-          const DateTimeTimestampConverter().toJson(instance.createdAt),
+      'github': instance.github,
+      'ownerUid': instance.ownerUid,
       'updatedAt':
           const DateTimeTimestampConverter().toJson(instance.updatedAt),
     };

@@ -5,7 +5,7 @@ import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
 import 'pages/settings_page.dart';
 import 'providers/providers.dart';
-import 'pages/sign_in.dart';//サインイン画面
+import 'pages/sign_in.dart'; //サインイン画面
 
 //import 'dart:io'; // プラットフォーム判定用
 
@@ -32,7 +32,6 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
     return Scaffold(
-
       appBar: AppBar(
         title: const Text('TechCard'),
         actions: [
@@ -47,8 +46,6 @@ class AppShell extends ConsumerWidget {
           ),
         ],
       ),
-
-
       body: IndexedStack(
         index: currentIndex,
         children: const [

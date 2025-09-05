@@ -16,19 +16,20 @@ part 'user_profile.freezed.dart';
 part 'user_profile.g.dart';
 
 @freezed
-class UserProfile with _$UserProfile {
-  const factory UserProfile({
+class MyProfile with _$MyProfile {
+  const factory MyProfile({
     required String avatar,
     required String name,
     required String userId,
-    @DateTimeTimestampConverter() required DateTime createdAt,
     required String email,
-    @Default(<String>[]) List<String> friendIds,
     String? github,
     @Default('') String message,
+    @Default(<String>[]) List<String> friendIds,
     @Default(<String>[]) List<String> skills,
-  }) = _UserProfile;
+    @DateTimeTimestampConverter() required DateTime createdAt,
+    @DateTimeTimestampConverter() required DateTime updatedAt,
+  }) = _MyProfile;
 
-  factory UserProfile.fromJson(Map<String, dynamic> json) =>
-      _$UserProfileFromJson(json);
+  factory MyProfile.fromJson(Map<String, dynamic> json) =>
+      _$MyProfileFromJson(json);
 }

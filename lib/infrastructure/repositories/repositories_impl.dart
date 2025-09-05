@@ -7,16 +7,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final LocalDataSource local;
 
   @override
-  Future<UserProfile?> getProfile() async {
+  Future<MyProfile?> getProfile() async {
     final map = local.readJson(LocalKeys.profile);
     if (map == null) {
       return null;
     }
-    return UserProfile.fromJson(map);
+    return MyProfile.fromJson(map);
   }
 
   @override
-  Future<void> saveProfile(UserProfile profile) async {
+  Future<void> saveProfile(MyProfile profile) async {
     await local.writeJson(LocalKeys.profile, profile.toJson());
   }
 }

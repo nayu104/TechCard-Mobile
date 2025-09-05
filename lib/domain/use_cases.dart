@@ -7,7 +7,7 @@ class GetProfileUseCase {
   final ProfileRepository repo;
 
   /// プロフィールを取得する。未設定時はnull。
-  Future<UserProfile?> call() => repo.getProfile();
+  Future<MyProfile?> call() => repo.getProfile();
 }
 
 class UpdateProfileUseCase {
@@ -16,7 +16,7 @@ class UpdateProfileUseCase {
   final ActivityRepository activityRepository;
 
   /// プロフィールを検証し保存。成功時に活動ログを追記。
-  Future<void> call(UserProfile profile) async {
+  Future<void> call(MyProfile profile) async {
     // ADDED COMMENT: 入力検証
     // - name: 空禁止（表示名として必須）
     // - message: ひとことは50文字以内（空は許容、要件に応じて調整可）
