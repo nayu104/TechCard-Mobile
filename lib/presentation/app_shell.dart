@@ -5,6 +5,8 @@ import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
 import 'pages/settings_page.dart';
 import 'providers/providers.dart';
+import 'pages/sign_in.dart';//サインイン画面
+
 //import 'dart:io'; // プラットフォーム判定用
 
 /// アプリのシェル。
@@ -30,6 +32,23 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
     return Scaffold(
+
+      appBar: AppBar(
+        title: const Text('TechCard'),
+        actions: [
+          IconButton(
+            tooltip: 'ログイン',
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SignInPage()),
+              );
+            },
+          ),
+        ],
+      ),
+
+
       body: IndexedStack(
         index: currentIndex,
         children: const [
