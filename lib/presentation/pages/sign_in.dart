@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_providers.dart';
-import '../../presentation/widgets/custom_text_field.dart';
+import 'package:characters/characters.dart';
 
-// ===== ここから修正 =====
-// テスト用シンプルログイン画面 → 名前入力付きログイン画面に変更
+import '../providers/auth_providers.dart';
+import '../widgets/custom_text_field.dart';
+
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
   static const route = '/sign-in';
@@ -16,19 +17,28 @@ class SignInPage extends ConsumerStatefulWidget {
 class _SignInPageState extends ConsumerState<SignInPage> {
   final TextEditingController _nameController = TextEditingController();
   bool _isLoading = false;
+  bool _canSubmit = false;
 
-//メモリリーク防止：コントローラーを破棄（テキスト破棄）
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(() {
+      final t = _nameController.text.trim();
+      final ok = t.isNotEmpty && t.characters.length <= 15; // 1〜15文字
+      if (ok != _canSubmit) {
+        setState(() => _canSubmit = ok);
+      }
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
   }
-// ===== ここまで修正 =====
 
   @override
   Widget build(BuildContext context) {
-    // 認証状態を監視
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('サインイン'),
@@ -37,90 +47,88 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'TechCard',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 48),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'TechCard',
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 32),
 
-              CustomTextField(
-                labelText: 'ニックネーム',
-                hintText: 'ニックネームを入力 (8文字まで)',
-                controller: _nameController,
-                maxLength: 8, // ← これで文字数制限が有効になる
-              ),
+                  // ★ CustomTextField の引数は “名前付き” で、カンマ/カッコを揃える
+                  CustomTextField(
+                    labelText: 'ニックネーム',
+                    hintText: 'ニックネームを入力 (15文字まで)',
+                    controller: _nameController,
+                    maxLength: 15, // カウンタ表示
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(15), // 実入力の物理制限
+                    ],
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleGuestLogin(),
+                  ),
 
-              // TextField(
-              //   controller: _nameController,
-              //   maxLength: 8,
-              //   decoration: const InputDecoration(
-              //     labelText: 'ニックネーム',
-              //     hintText: 'ニックネームを入力 (8文字まで)',
-              //     border: OutlineInputBorder(),
-              //   ),
-              // ),
-              const SizedBox(height: 16),
-              // ===== ここまで追加 =====
+                  const SizedBox(height: 16),
 
-              ElevatedButton(
-                // ローディング or エラー表示
-                onPressed: _isLoading ? null : _handleGuestLogin,
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('ゲストでログイン'),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      // ★ onPressed と child は “名前付き引数”。位置引数にしない
+                      onPressed:
+                          (_isLoading || !_canSubmit) ? null : _handleGuestLogin,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('ゲストでログイン'),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  //エラー処理関数
   Future<void> _handleGuestLogin() async {
     final name = _nameController.text.trim();
 
-    if (name.isEmpty) {
+    if (name.isEmpty || name.characters.length > 15) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ニックネームを入力してください')),
+        const SnackBar(content: Text('ニックネームは1〜15文字で入力してください')),
       );
       return;
     }
 
-    if (name.length > 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ニックネームは8文字以内で入力してください')),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final guestLogin = ref.read(guestLoginWithNameProvider);
       await guestLogin(name);
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // 必要なら前画面へ戻す
     } catch (e) {
-      print('ログインエラー: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ログインに失敗しました: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ログインに失敗しました: $e')),
+      );
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() => _isLoading = false);
       }
     }
   }
-  // ===== ここまで追加 =====
 }
