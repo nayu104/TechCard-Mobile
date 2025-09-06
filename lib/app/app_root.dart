@@ -29,9 +29,12 @@ class _AppRootState extends ConsumerState<AppRoot> {
       darkTheme: _darkTheme,
       home: authState.when(
         data: (user) {
+          print('認証状態更新: user = ${user?.uid}');
           if (user != null) {
+            print('ユーザーがログイン済み、AppShellを表示');
             return const AppShell();
           } else {
+            print('ユーザーが未ログイン、SignInPageを表示');
             return const SignInPage();
           }
         },

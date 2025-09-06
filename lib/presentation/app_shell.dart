@@ -4,8 +4,8 @@ import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
 import 'pages/settings_page.dart';
+import 'pages/sign_in.dart';
 import 'providers/providers.dart';
-import 'pages/sign_in.dart'; //サインイン画面
 
 //import 'dart:io'; // プラットフォーム判定用
 
@@ -40,7 +40,7 @@ class AppShell extends ConsumerWidget {
             icon: const Icon(Icons.person),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SignInPage()),
+                MaterialPageRoute<void>(builder: (_) => const SignInPage()),
               );
             },
           ),

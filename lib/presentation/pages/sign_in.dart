@@ -34,11 +34,15 @@ class SignInPage extends ConsumerWidget {
                 try {
                   final login = ref.read(loginActionProvider);
                   await login();
-
-                  // 強制的にauthStateProviderを無効化して再読み込み
-                  ref.invalidate(authStateProvider);
+                  // authStateProviderは自動的に更新されるため、手動での無効化は不要
                 } catch (e) {
                   print('ログインエラー: $e');
+                  // エラー表示を追加
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('ログインに失敗しました: $e')),
+                    );
+                  }
                 }
               },
               child: const Text('ゲストでログイン'),

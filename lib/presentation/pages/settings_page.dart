@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
+import '../providers/auth_providers.dart';
 import '../widgets/settings/theme_selector.dart';
 
 /// 設定ページ。
@@ -39,6 +40,49 @@ class SettingsPage extends ConsumerWidget {
                       },
                     )
                   ]),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('アカウント',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        try {
+                          final logout = ref.read(logoutActionProvider);
+                          await logout();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('ログアウトしました')),
+                            );
+                          }
+                        } catch (e) {
+                          print('ログアウトエラー: $e');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('ログアウトに失敗しました: $e')),
+                            );
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.logout),
+                      label: const Text('ログアウト'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

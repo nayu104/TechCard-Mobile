@@ -11,7 +11,10 @@ final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 // 用途: ログイン/ログアウト時の自動画面切り替え
 final authStateProvider = StreamProvider<User?>((ref) {
   final authService = ref.watch(authServiceProvider);
-  return authService.authStateChanges;
+  return authService.authStateChanges.map((user) {
+    print('authStateProvider: 認証状態変化 detected, user = ${user?.uid}');
+    return user;
+  });
 });
 
 // ユーザーリポジトリのProvider - シングルトン提供
