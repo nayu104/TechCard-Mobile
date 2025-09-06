@@ -60,3 +60,40 @@ final logoutActionProvider = Provider<Future<void> Function()>((ref) {
     // 成功時はauthStateProviderが自動検知して画面遷移
   };
 });
+
+final guestLoginWithNameProvider =
+    Provider<Future<void> Function(String name)>((ref) {
+  return (name) async {
+    final authService = ref.read(authServiceProvider);
+    final userRepo = ref.read(userRepositoryProvider);
+
+    final userCredential = await authService.signInAnonymously();
+    final user = userCredential.user;
+
+    if (user == null) {
+      throw Exception('ログインに失敗しました');
+    }
+    // 2. ゲスト用プロフィール作成（ユニークなuserIdを生成）
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final randomSuffix = user.uid.substring(0, 6);
+    final userId = 'guest_${timestamp}_$randomSuffix';
+
+    final profile = MyProfile(
+      avatar: '',
+      name: name,
+      userId: userId,
+      email: '',
+      github: null,
+      message: '',
+      friendIds: const [],
+      skills: const [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    // 3. Firestoreに保存
+    await userRepo.saveUserProfile(user.uid, profile);
+
+    print('ゲストログイン完了: $name (userId: $userId)');
+  };
+});

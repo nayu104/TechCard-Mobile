@@ -11,6 +11,7 @@ class CustomTextField extends StatelessWidget {
     this.borderSide, // 通常時の下線スタイル
     this.focusedBorderSide, // フォーカス時の下線スタイル
     this.maxLines = 1, // 入力可能な最大行数（デフォルト1）
+    this.maxLength, // ===== ここから追加 =====
     this.keyboardType, // キーボードの種類（文字/数値など）
     this.obscureText = false, // パスワード入力のように隠すか
     this.onChanged, // 入力変化時のコールバック
@@ -27,6 +28,7 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController? controller; // 入力内容を保持・操作するコントローラ
   final BorderSide? focusedBorderSide; // フォーカス時の下線色設定
   final int? maxLines; // 最大行数
+  final int? maxLength; // ===== ここから追加 =====
   final TextInputType? keyboardType; // 入力種別（例：email, number）
   final bool obscureText; // 入力内容を非表示にするか
   final void Function(String)? onChanged; // 入力文字が変化したときに呼ばれる
@@ -46,6 +48,7 @@ class CustomTextField extends StatelessWidget {
         controller: controller, // 入力内容の管理
         validator: validator, // 入力値の検証
         maxLines: maxLines, // 最大行数を反映
+        maxLength: maxLength, // ===== ここから追加 =====
         keyboardType: keyboardType, // 入力種別を反映
         obscureText: obscureText, // パスワード入力対応
         onChanged: onChanged, // 入力時のコールバック
