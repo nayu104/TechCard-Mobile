@@ -8,6 +8,7 @@ import 'package:techcard_mobile/utils/responsive_text.dart';
 
 import '../../domain/models.dart';
 import '../providers/providers.dart';
+import '../providers/usecase_providers.dart';
 import '../providers/skills/editing_skills_provider.dart';
 import '../widgets/my_card/actions_row.dart';
 import '../widgets/my_card/activities_list.dart';
@@ -29,7 +30,7 @@ class MyCardPage extends ConsumerWidget {
     // watch方針: プロフィールはwatch、編集ON/OFFはStateProviderで再ビルド最小化。
 
     final isEditing = ref.watch(isEditingProvider);
-    final profileAsync = ref.watch(profileProvider);
+    final profileAsync = ref.watch(firebaseProfileProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -239,8 +240,9 @@ class MyCardPage extends ConsumerWidget {
                                       // 名前編集
                                       CustomTextField(
                                         controller: controllerName,
-                                        labelText: '名前',
+                                        labelText: '名前(8文字まで)',
                                         hintText: 'ここに入力してください',
+                                        maxLength: 8,
                                       ),
                                       const SizedBox(height: 16),
 
@@ -316,6 +318,7 @@ class MyCardPage extends ConsumerWidget {
       return;
     }
 
+    // プロフィール更新
     final updated = MyProfile(
       avatar: profile.avatar.isNotEmpty
           ? profile.avatar
@@ -334,10 +337,10 @@ class MyCardPage extends ConsumerWidget {
     );
 
     try {
-      final uc = await ref.read(updateProfileUseCaseProvider.future);
-      await uc(updated);
+      final saveFunction = ref.read(firebaseUpdateProfileProvider);
+      await saveFunction(updated);
       await Fluttertoast.showToast(msg: '保存しました');
-      ref.invalidate(profileProvider);
+      ref.invalidate(firebaseProfileProvider);
       ref.read(editingSkillsProvider.notifier).state = const [];
       ref.read(isEditingProvider.notifier).state = false;
     } on Exception catch (e) {

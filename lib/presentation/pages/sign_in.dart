@@ -17,6 +17,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   final TextEditingController _nameController = TextEditingController();
   bool _isLoading = false;
 
+//メモリリーク防止：コントローラーを破棄（テキスト破棄）
   @override
   void dispose() {
     _nameController.dispose();
@@ -26,6 +27,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 認証状態を監視
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('サインイン'),
@@ -48,17 +51,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
               CustomTextField(
                 labelText: 'ニックネーム',
-                hintText: 'ニックネームを入力 (15文字まで)',
+                hintText: 'ニックネームを入力 (8文字まで)',
                 controller: _nameController,
-                maxLength: 15, // ← これで文字数制限が有効になる
+                maxLength: 8, // ← これで文字数制限が有効になる
               ),
 
               // TextField(
               //   controller: _nameController,
-              //   maxLength: 15,
+              //   maxLength: 8,
               //   decoration: const InputDecoration(
               //     labelText: 'ニックネーム',
-              //     hintText: 'ニックネームを入力 (15文字まで)',
+              //     hintText: 'ニックネームを入力 (8文字まで)',
               //     border: OutlineInputBorder(),
               //   ),
               // ),
@@ -90,9 +93,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       return;
     }
 
-    if (name.length > 15) {
+    if (name.length > 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ニックネームは15文字以内で入力してください')),
+        const SnackBar(content: Text('ニックネームは8文字以内で入力してください')),
       );
       return;
     }

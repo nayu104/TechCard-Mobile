@@ -28,20 +28,12 @@ class ExchangeService {
     if (userId == 'demo') {
       return Contact(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
-        name: 'Alice Johnson',
-        userId: 'alice_backend',
-        bio: 'バックエンドエンジニアとしてNode.jsとPythonでAPI開発をしています。'
-            'データベース設計からクラウドインフラまで幅広く担当しています。',
+        name: 'エラー花子',
+        userId: 'error_hanako',
+        bio: 'エラー花子です',
         skills: const [
-          'Node.js',
-          'Python',
-          'PostgreSQL',
-          'Docker',
-          'AWS',
-          'GraphQL'
+          'エラー',
         ],
-        company: 'StartupCorp',
-        role: 'Backend Engineer',
       );
     }
     return Contact(

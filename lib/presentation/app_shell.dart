@@ -6,6 +6,8 @@ import 'pages/my_card_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/sign_in.dart';
 import 'providers/providers.dart';
+import 'providers/auth_providers.dart';
+import 'providers/usecase_providers.dart';
 
 //import 'dart:io'; // プラットフォーム判定用
 
@@ -31,19 +33,39 @@ class AppShell extends ConsumerWidget {
   /// IndexedStackで状態を保持しつつタブ切替を実現。
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
+    final authState = ref.watch(authStateProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('TechCard'),
         actions: [
-          IconButton(
-            tooltip: 'ログイン',
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const SignInPage()),
-              );
+          // 認証状態に応じて表示を切り替え
+          authState.when(
+            data: (user) {
+              if (user == null) {
+                // 未ログイン時：ログインボタンを表示
+                return Tooltip(
+                  message: 'ログイン',
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.person),
+                    label: const Text('ログイン'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                            builder: (_) => const SignInPage()),
+                      );
+                    },
+                  ),
+                );
+              } else {
+                // ログイン済み時：ユーザー名を表示
+                return _buildWelcomeMessage(ref, user.uid);
+              }
             },
-          ),
+            //SizedBox.shrink() は“幅0×高さ0”の箱＝画面上は何も出さないウィジェット
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          )
         ],
       ),
       body: IndexedStack(
@@ -92,6 +114,29 @@ class AppShell extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  // ログイン済み時のウェルカムメッセージ
+  Widget _buildWelcomeMessage(WidgetRef ref, String uid) {
+    final profileAsync = ref.watch(firebaseProfileProvider);
+
+    return profileAsync.when(
+      data: (profile) {
+        final userName = profile?.name ?? 'ゲスト';
+        return const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Center(
+            child: Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 24,
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }
