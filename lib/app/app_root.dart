@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../presentation/app_shell.dart';
 import '../presentation/pages/sign_in.dart';
-import '../presentation/providers/auth_providers.dart';
 import '../presentation/providers/providers.dart';
 
 class AppRoot extends ConsumerStatefulWidget {

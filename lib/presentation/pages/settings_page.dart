@@ -2,7 +2,6 @@
 // watch方針: themeModeはwatchで反映、保存はイベントでpersistTheme。
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_providers.dart';
 import '../providers/providers.dart';
 import '../widgets/settings/theme_selector.dart';
 
