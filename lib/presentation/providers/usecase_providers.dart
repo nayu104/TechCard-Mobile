@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:techcard_mobile/domain/models.dart';
 import 'package:techcard_mobile/domain/use_cases.dart';
-import 'package:techcard_mobile/presentation/providers/data_providers.dart';
 import 'package:techcard_mobile/presentation/providers/auth_providers.dart';
+import 'package:techcard_mobile/presentation/providers/data_providers.dart';
 
 /// プロフィール取得UseCaseの提供。
 final getProfileUseCaseProvider =
@@ -58,21 +58,30 @@ final contactsProvider = FutureProvider<List<Contact>>((ref) async {
 /// Firebase版名刺一覧状態
 /// 背景: ゲストログイン後、Firebaseに保存された名刺一覧を表示する必要がある
 /// 意図: 認証状態に基づいてFirebaseから名刺一覧を取得し、一覧画面で表示
-final firebaseContactsProvider = FutureProvider<List<Contact>>((ref) async {
+final firebaseContactsProvider = FutureProvider<List<Contact>>((ref) {
   final authState = ref.watch(authStateProvider);
 
   return authState.when(
-    data: (user) async {
+    data: (user) {
       if (user == null) {
-        return [];
+        return Future.value([]);
       }
       // Firebaseから名刺一覧を取得
       final userRepo = ref.watch(userRepositoryProvider);
-      return await userRepo.getContacts(user.uid);
+      return userRepo.getContacts(user.uid);
     },
     loading: () => [],
     error: (_, __) => [],
   );
+});
+
+/// 特定ユーザーのプロフィール差分更新
+/// 背景: ユーザーがメッセージを更新した際、そのユーザーのみを更新したい
+/// 意図: ピンポイントで特定のプロフィールのみを取得して差分更新
+final FutureProviderFamily<Contact?, String> contactUpdateProvider =
+    FutureProvider.family<Contact?, String>((ref, String userId) {
+  final userRepo = ref.watch(userRepositoryProvider);
+  return userRepo.getContactUpdate(userId);
 });
 
 /// 活動ログ一覧状態。
@@ -93,16 +102,16 @@ final localProfileProvider = FutureProvider<MyProfile?>((ref) async {
 /// Firebase版プロフィール状態
 /// 背景: ゲストログイン後、Firebaseに保存されたプロフィールを表示する必要がある
 /// 意図: 認証状態に基づいてFirebaseからプロフィールを取得し、MyCardで表示
-final firebaseProfileProvider = FutureProvider<MyProfile?>((ref) async {
+final firebaseProfileProvider = FutureProvider<MyProfile?>((ref) {
   final authState = ref.watch(authStateProvider);
 
   return authState.when(
-    data: (user) async {
+    data: (user) {
       if (user == null) {
-        return null;
+        return Future.value();
       }
       final userRepo = ref.watch(userRepositoryProvider);
-      return await userRepo.getUserProfile(user.uid); // Firebaseから取得
+      return userRepo.getUserProfile(user.uid); // Firebaseから取得
     },
     loading: () => null,
     error: (_, __) => null,
@@ -117,7 +126,7 @@ final firebaseUpdateProfileProvider = // 認証状態を取得（一度だけ）
   return (MyProfile profile) async {
     // ユーザー情報を取得
     final authState = ref.read(authStateProvider);
-    final user = await authState.when(
+    final user = authState.when(
       data: (user) => user,
       loading: () => null,
       error: (_, __) => null,
@@ -131,3 +140,6 @@ final firebaseUpdateProfileProvider = // 認証状態を取得（一度だけ）
     await userRepo.saveUserProfile(user.uid, profile);
   };
 });
+
+// 活動ログのリフレッシュ状態管理
+final isRefreshingActivitiesProvider = StateProvider<bool>((ref) => false);

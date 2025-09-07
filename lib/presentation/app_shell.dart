@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/contacts_page.dart';
@@ -5,9 +6,8 @@ import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/sign_in.dart';
-import 'providers/providers.dart';
 import 'providers/auth_providers.dart';
-import 'providers/usecase_providers.dart';
+import 'providers/providers.dart';
 
 //import 'dart:io'; // プラットフォーム判定用
 
@@ -33,7 +33,7 @@ class AppShell extends ConsumerWidget {
   /// IndexedStackで状態を保持しつつタブ切替を実現。
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
-    final authState = ref.watch(authStateProvider);
+    final authState = ref.watch<AsyncValue<User?>>(authStateProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -63,7 +63,7 @@ class AppShell extends ConsumerWidget {
                 return _buildWelcomeMessage(ref, user.uid);
               }
             },
-            //SizedBox.shrink() は“幅0×高さ0”の箱＝画面上は何も出さないウィジェット
+            //SizedBox.shrink() は"幅0×高さ0"の箱＝画面上は何も出さないウィジェット
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
           )
@@ -126,13 +126,14 @@ class AppShell extends ConsumerWidget {
       data: (profile) {
         final userName = profile?.name ?? 'ゲスト'; // ★ 表示名（未設定ならゲスト）
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.check_circle, color: Colors.green),
               const SizedBox(width: 8),
-              Text(userName, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(userName,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),
         );

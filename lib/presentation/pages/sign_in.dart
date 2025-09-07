@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:characters/characters.dart';
 
 import '../providers/auth_providers.dart';
 import '../widgets/custom_text_field.dart';
@@ -15,9 +14,9 @@ class SignInPage extends ConsumerStatefulWidget {
 }
 
 class _SignInPageState extends ConsumerState<SignInPage> {
-  final TextEditingController _nameController = TextEditingController();
-  bool _isLoading = false;
-  bool _canSubmit = false;
+  final _nameController = TextEditingController();
+  var _isLoading = false;
+  var _canSubmit = false;
 
   @override
   void initState() {
@@ -96,7 +95,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     ),
                   ),
 
-                  
                   const SizedBox(height: 24),
                   const Text('または'),
                   const SizedBox(height: 12),
@@ -112,7 +110,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           const SnackBar(content: Text('Github未実装ちょま')),
                         );
                       },
-                      icon: const Icon(Icons.code, color: Colors.white), //Githubアイコン代用
+                      icon: const Icon(Icons.code,
+                          color: Colors.white), //Githubアイコン代用
                       label: const Text(
                         'Githubでログイン',
                         style: TextStyle(fontWeight: FontWeight.bold),
@@ -152,10 +151,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       final guestLogin = ref.read(guestLoginWithNameProvider);
       await guestLogin(name);
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       Navigator.of(context).pop(); // 必要なら前画面へ戻す
-    } catch (e) {
-      if (!mounted) return;
+    } on Exception catch (e) {
+      if (!mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('ログインに失敗しました: $e')),
       );
@@ -167,5 +170,4 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   //Githubでログインする
-
 }

@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entities/user_profile.dart';
-import '../../domain/entities/public_profile.dart';
+
 import '../../domain/entities/contact.dart';
+import '../../domain/entities/public_profile.dart';
+import '../../domain/entities/user_profile.dart';
 
 // ユーザープロフィールのFirestore操作を担当
 // 役割: users_v01（プライベート）とpublic_profiles（公開）の連携管理
@@ -22,8 +23,8 @@ class UserRepositoryImpl {
 
       //
       return MyProfile.fromJson(doc.data()!);
-    } catch (e) {
-      print('ユーザープロフィール取得エラー: $e');
+    } on Exception {
+      // ユーザープロフィール取得エラー
       return null;
     }
   }
@@ -53,8 +54,8 @@ class UserRepositoryImpl {
 
       // 4. 一括実行（全て成功 or 全て失敗）
       await batch.commit();
-    } catch (e) {
-      print('ユーザープロフィール保存エラー: $e');
+    } on Exception {
+      // ユーザープロフィール保存エラー
       rethrow;
     }
   }
@@ -64,17 +65,21 @@ class UserRepositoryImpl {
   Future<PublicProfile?> getPublicProfile(String userId) async {
     try {
       final doc = await _db.collection('public_profiles').doc(userId).get();
-      if (!doc.exists || doc.data() == null) return null;
+      if (!doc.exists || doc.data() == null) {
+        return null;
+      }
 
       return PublicProfile.fromJson(doc.data()!);
-    } catch (e) {
-      print('公開プロフィール取得エラー: $e');
+    } on Exception {
+      // 公開プロフィール取得エラー
       return null;
     }
   }
 
   // 名刺一覧取得（友達の公開プロフィール一覧）
   // 対象: public_profiles - 友達の公開プロフィールを取得
+  // 背景: プルトゥリフレッシュ時に全データを再取得する必要がある
+  // 意図: 効率的な一括取得でパフォーマンスを向上させる
   Future<List<Contact>> getContacts(String uid) async {
     try {
       // 1. ユーザーのプロフィールを取得してfriendIdsを取得
@@ -84,12 +89,22 @@ class UserRepositoryImpl {
       }
 
       // 2. friendIdsの公開プロフィールを一括取得
+      // 背景: 個別取得（N+1問題）を避けてネットワーク効率を向上
+      // 意図: 1回のクエリで全友達のプロフィールを取得
+      //初期取得時に利用
       final friendIds = userProfile.friendIds;
+
+      // FirestoreのwhereInクエリで一括取得
+      final querySnapshot = await _db
+          .collection('public_profiles')
+          .where(FieldPath.documentId, whereIn: friendIds)
+          .get();
+
       final contacts = <Contact>[];
 
-      for (final friendId in friendIds) {
-        final publicProfile = await getPublicProfile(friendId);
-        if (publicProfile != null) {
+      for (final doc in querySnapshot.docs) {
+        try {
+          final publicProfile = PublicProfile.fromJson(doc.data());
           // PublicProfile → Contact変換
           final contact = Contact(
             id: publicProfile.userId,
@@ -101,21 +116,54 @@ class UserRepositoryImpl {
             avatarUrl: publicProfile.avatar,
           );
           contacts.add(contact);
+        } on Exception {
+          // プロフィール変換エラー
+          // エラーが発生したプロフィールはスキップ
         }
       }
 
       return contacts;
-    } catch (e) {
-      print('名刺一覧取得エラー: $e');
+    } on Exception {
+      // 名刺一覧取得エラー
       return [];
+    }
+  }
+
+  // 特定ユーザーのプロフィール差分更新
+  // 背景: ユーザーがメッセージを更新した際、そのユーザーのみを更新したい
+  // 意図: ピンポイントで特定のプロフィールのみを取得して差分更新
+  Future<Contact?> getContactUpdate(String userId) async {
+    try {
+      final doc = await _db.collection('public_profiles').doc(userId).get();
+      if (!doc.exists || doc.data() == null) {
+        return null;
+      }
+
+      final publicProfile = PublicProfile.fromJson(doc.data()!);
+      return Contact(
+        id: publicProfile.userId,
+        name: publicProfile.name,
+        userId: publicProfile.userId,
+        bio: publicProfile.message,
+        githubUsername: _extractGithubUsername(publicProfile.github),
+        skills: publicProfile.skills,
+        avatarUrl: publicProfile.avatar,
+      );
+    } on Exception {
+      // プロフィール差分更新エラー
+      return null;
     }
   }
 
   // GitHub URLからユーザー名を抽出
   String _extractGithubUsername(String? githubUrl) {
-    if (githubUrl == null || githubUrl.isEmpty) return '';
+    if (githubUrl == null || githubUrl.isEmpty) {
+      return '';
+    }
     final uri = Uri.tryParse(githubUrl);
-    if (uri == null) return '';
+    if (uri == null) {
+      return '';
+    }
     final pathSegments = uri.pathSegments;
     if (pathSegments.isNotEmpty) {
       return pathSegments.first;

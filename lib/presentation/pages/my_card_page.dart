@@ -8,7 +8,6 @@ import 'package:techcard_mobile/utils/responsive_text.dart';
 
 import '../../domain/models.dart';
 import '../providers/providers.dart';
-import '../providers/usecase_providers.dart';
 import '../providers/skills/editing_skills_provider.dart';
 import '../widgets/my_card/actions_row.dart';
 import '../widgets/my_card/activities_list.dart';
@@ -126,8 +125,75 @@ class MyCardPage extends ConsumerWidget {
                     Expanded(child: StatCard(title: '今月の交換', value: '3')),
                   ]),
                   const SizedBox(height: 12),
-                  const Text('最近の活動',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('最近の活動',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final isRefreshing =
+                              ref.watch(isRefreshingActivitiesProvider);
+                          return GestureDetector(
+                            onTap: isRefreshing
+                                ? null
+                                : () async {
+                                    // ローディング状態を開始
+                                    ref
+                                        .read(isRefreshingActivitiesProvider
+                                            .notifier)
+                                        .state = true;
+                                    try {
+                                      // 活動ログプロバイダーを無効化して再取得
+                                      ref.invalidate(activitiesProvider);
+                                      // プロバイダーの完了を待つ
+                                      await ref.read(activitiesProvider.future);
+                                    } on Exception {
+                                      // エラーハンドリング（必要に応じてユーザーに通知）
+                                    } finally {
+                                      // ローディング状態を終了
+                                      ref
+                                          .read(isRefreshingActivitiesProvider
+                                              .notifier)
+                                          .state = false;
+                                    }
+                                  },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: isRefreshing
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.1)
+                                    : Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isRefreshing
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).dividerColor,
+                                ),
+                              ),
+                              child: AnimatedRotation(
+                                turns: isRefreshing ? 1.0 : 0.0,
+                                duration: const Duration(milliseconds: 1000),
+                                child: isRefreshing
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.refresh),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   const ActivitiesList(),
                 ],

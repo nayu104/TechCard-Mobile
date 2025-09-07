@@ -16,8 +16,6 @@ environment:
   sdk: '>=3.1.0 <4.0.0'
 
 dependencies:
-  # Firebase Authentication
-  firebase_auth: ^5.7.0
   # Firestore クエリ/データ取得・保存用。
   cloud_firestore: ^5.6.12
   # Firebase Callable Functions 呼び出し用。
@@ -26,6 +24,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   # 不正アクセス防止のApp Check連携用。
   firebase_app_check: ^0.3.2+2
+  # Firebase Authentication
+  firebase_auth: ^5.7.0
   # Firebase初期化・各サービスの基盤。
   firebase_core: ^3.15.2
   # 画像等のオブジェクトストレージ用。

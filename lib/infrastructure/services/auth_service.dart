@@ -14,12 +14,9 @@ class AuthService {
 
   Future<UserCredential> signInAnonymously() async {
     try {
-      print('匿名ログイン開始...');
       final result = await _auth.signInAnonymously();
-      print('匿名ログイン成功: ${result.user?.uid}');
       return result;
     } catch (e) {
-      print('匿名ログインエラー: $e');
       rethrow;
     }
   }
@@ -29,9 +26,7 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _auth.signOut();
-      print('ログアウト完了');
     } catch (e) {
-      print('ログアウトエラー: $e');
       rethrow;
     }
   }

@@ -19,8 +19,8 @@ class CustomTextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.onSubmitted,
-    this.inputFormatters,   // ← 追加
-    this.textInputAction,   // ← 追加
+    this.inputFormatters, // ← 追加
+    this.textInputAction, // ← 追加
   });
 
   final String? labelText;
@@ -59,22 +59,22 @@ class CustomTextField extends StatelessWidget {
         obscureText: obscureText,
         onChanged: onChanged,
         onFieldSubmitted: onSubmitted,
-        inputFormatters: inputFormatters,   // ← 追加
-        textInputAction: textInputAction,   // ← 追加
+        inputFormatters: inputFormatters, // ← 追加
+        textInputAction: textInputAction, // ← 追加
         style: TextStyle(color: onSurface),
         decoration: InputDecoration(
           prefixIcon: prefixIcon,
           suffixIcon: suffixIcon,
           enabledBorder: UnderlineInputBorder(
             borderSide: borderSide ??
-                BorderSide(color: onSurface.withOpacity(0.5)),
+                BorderSide(color: onSurface.withValues(alpha: 0.5)),
           ),
           labelText: labelText,
           hintText: hintText,
-          labelStyle: labelStyle ??
-              TextStyle(color: onSurface.withOpacity(0.5)),
+          labelStyle:
+              labelStyle ?? TextStyle(color: onSurface.withValues(alpha: 0.5)),
           hintStyle: TextStyle(
-            color: onSurface.withOpacity(0.5),
+            color: onSurface.withValues(alpha: 0.5),
             fontSize: 12,
           ),
           floatingLabelBehavior: FloatingLabelBehavior.always,

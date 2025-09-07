@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../presentation/app_shell.dart';
-import '../presentation/providers/providers.dart'; // ✅ 元のインポートを維持
-import '../presentation/providers/auth_providers.dart';
 import '../presentation/pages/sign_in.dart';
+import '../presentation/providers/auth_providers.dart';
+import '../presentation/providers/providers.dart';
 
 class AppRoot extends ConsumerStatefulWidget {
   const AppRoot({super.key});
@@ -29,12 +30,9 @@ class _AppRootState extends ConsumerState<AppRoot> {
       darkTheme: _darkTheme,
       home: authState.when(
         data: (user) {
-          print('認証状態更新: user = ${user?.uid}');
           if (user != null) {
-            print('ユーザーがログイン済み、AppShellを表示');
             return const AppShell();
           } else {
-            print('ユーザーが未ログイン、SignInPageを表示');
             return const SignInPage();
           }
         },
@@ -58,8 +56,8 @@ class _AppRootState extends ConsumerState<AppRoot> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error, size: 64, color: Colors.red),
-                  SizedBox(height: 16),
+                  const Icon(Icons.error, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
                   Text('認証エラー: $error'),
                 ],
               ),

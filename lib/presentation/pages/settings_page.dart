@@ -2,8 +2,8 @@
 // watch方針: themeModeはwatchで反映、保存はイベントでpersistTheme。
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/providers.dart';
 import '../providers/auth_providers.dart';
+import '../providers/providers.dart';
 import '../widgets/settings/theme_selector.dart';
 
 /// 設定ページ。
@@ -64,8 +64,8 @@ class SettingsPage extends ConsumerWidget {
                               const SnackBar(content: Text('ログアウトしました')),
                             );
                           }
-                        } catch (e) {
-                          print('ログアウトエラー: $e');
+                        } on Exception catch (e) {
+                          // ログアウトエラー
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('ログアウトに失敗しました: $e')),
