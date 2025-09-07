@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
+import '../providers/usecase_providers.dart';
 import '../widgets/contacts/contact_list_item.dart';
 import '../widgets/contacts/empty_state.dart';
 // ...existing code...
@@ -15,7 +16,9 @@ class ContactsPage extends ConsumerWidget {
   /// 名刺一覧を取得し、展開/折りたたみ可能なリストを描画する。
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final contactsAsync = ref.watch(contactsProvider);
+    // Firebaseから名刺一覧を取得
+    // getContactsメソッドを使用
+    final contactsAsync = ref.watch(firebaseContactsProvider);
     final expanded = <String, bool>{};
     return Scaffold(
       body: contactsAsync.when(

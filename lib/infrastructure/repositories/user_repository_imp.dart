@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/entities/public_profile.dart';
+import '../../domain/entities/contact.dart';
 
 // ユーザープロフィールのFirestore操作を担当
 // 役割: users_v01（プライベート）とpublic_profiles（公開）の連携管理
@@ -70,6 +71,56 @@ class UserRepositoryImpl {
       print('公開プロフィール取得エラー: $e');
       return null;
     }
+  }
+
+  // 名刺一覧取得（友達の公開プロフィール一覧）
+  // 対象: public_profiles - 友達の公開プロフィールを取得
+  Future<List<Contact>> getContacts(String uid) async {
+    try {
+      // 1. ユーザーのプロフィールを取得してfriendIdsを取得
+      final userProfile = await getUserProfile(uid);
+      if (userProfile == null || userProfile.friendIds.isEmpty) {
+        return [];
+      }
+
+      // 2. friendIdsの公開プロフィールを一括取得
+      final friendIds = userProfile.friendIds;
+      final contacts = <Contact>[];
+
+      for (final friendId in friendIds) {
+        final publicProfile = await getPublicProfile(friendId);
+        if (publicProfile != null) {
+          // PublicProfile → Contact変換
+          final contact = Contact(
+            id: publicProfile.userId,
+            name: publicProfile.name,
+            userId: publicProfile.userId,
+            bio: publicProfile.message,
+            githubUsername: _extractGithubUsername(publicProfile.github),
+            skills: publicProfile.skills,
+            avatarUrl: publicProfile.avatar,
+          );
+          contacts.add(contact);
+        }
+      }
+
+      return contacts;
+    } catch (e) {
+      print('名刺一覧取得エラー: $e');
+      return [];
+    }
+  }
+
+  // GitHub URLからユーザー名を抽出
+  String _extractGithubUsername(String? githubUrl) {
+    if (githubUrl == null || githubUrl.isEmpty) return '';
+    final uri = Uri.tryParse(githubUrl);
+    if (uri == null) return '';
+    final pathSegments = uri.pathSegments;
+    if (pathSegments.isNotEmpty) {
+      return pathSegments.first;
+    }
+    return '';
   }
 
   // MyProfile → PublicProfile変換（プライベート情報を除外）

@@ -49,9 +49,30 @@ final profileProvider = FutureProvider<MyProfile?>((ref) async {
 });
 
 /// 連絡先一覧状態。
+/// ローカルファースト版（既存）
 final contactsProvider = FutureProvider<List<Contact>>((ref) async {
   final uc = await ref.watch(getContactsUseCaseProvider.future);
   return uc();
+});
+
+/// Firebase版名刺一覧状態
+/// 背景: ゲストログイン後、Firebaseに保存された名刺一覧を表示する必要がある
+/// 意図: 認証状態に基づいてFirebaseから名刺一覧を取得し、一覧画面で表示
+final firebaseContactsProvider = FutureProvider<List<Contact>>((ref) async {
+  final authState = ref.watch(authStateProvider);
+
+  return authState.when(
+    data: (user) async {
+      if (user == null) {
+        return [];
+      }
+      // Firebaseから名刺一覧を取得
+      final userRepo = ref.watch(userRepositoryProvider);
+      return await userRepo.getContacts(user.uid);
+    },
+    loading: () => [],
+    error: (_, __) => [],
+  );
 });
 
 /// 活動ログ一覧状態。

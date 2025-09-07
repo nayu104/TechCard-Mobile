@@ -249,7 +249,7 @@ class MyCardPage extends ConsumerWidget {
                                       // GitHub編集
                                       CustomTextField(
                                         controller: controllerId,
-                                        labelText: 'GitHub',
+                                        labelText: 'テストGitHubあとでけす',
                                         hintText: 'ユーザー名またはURL',
                                         keyboardType: TextInputType.url,
                                       ),
