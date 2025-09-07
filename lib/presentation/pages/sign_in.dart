@@ -95,6 +95,38 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           : const Text('ゲストでログイン'),
                     ),
                   ),
+
+                  
+                  const SizedBox(height: 24),
+                  const Text('または'),
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      //押したら案内が出る
+                      onPressed: () {
+                        //ボタンを押したときひょっこっとメッセージ
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Github未実装ちょま')),
+                        );
+                      },
+                      icon: const Icon(Icons.code, color: Colors.white), //Githubアイコン代用
+                      label: const Text(
+                        'Githubでログイン',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      //ボタンの見た目
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white, //文字色
+                        shape: const StadiumBorder(),
+                        textStyle: const TextStyle(fontSize: 16),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -133,4 +165,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       }
     }
   }
+
+  //Githubでログインする
+
 }
