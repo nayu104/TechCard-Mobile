@@ -68,7 +68,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     labelText: 'ニックネーム',
                     hintText: 'ニックネームを入力 (8文字まで)',
                     controller: _nameController,
-                    maxLength: 15, // カウンタ表示
+                    maxLength: 8, // カウンタ表示
                     inputFormatters: [
                       LengthLimitingTextInputFormatter(8), // 実入力の物理制限
                     ],
