@@ -24,13 +24,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     super.initState();
     _nameController.addListener(() {
       final t = _nameController.text.trim();
-      final ok = t.isNotEmpty && t.characters.length <= 15; // 1〜15文字
+      final ok = t.isNotEmpty && t.characters.length <= 8; // 1〜15文字
       if (ok != _canSubmit) {
         setState(() => _canSubmit = ok);
       }
     });
   }
 
+  // メモリ開放
   @override
   void dispose() {
     _nameController.dispose();
@@ -65,11 +66,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   // ★ CustomTextField の引数は “名前付き” で、カンマ/カッコを揃える
                   CustomTextField(
                     labelText: 'ニックネーム',
-                    hintText: 'ニックネームを入力 (15文字まで)',
+                    hintText: 'ニックネームを入力 (8文字まで)',
                     controller: _nameController,
                     maxLength: 15, // カウンタ表示
                     inputFormatters: [
-                      LengthLimitingTextInputFormatter(15), // 実入力の物理制限
+                      LengthLimitingTextInputFormatter(8), // 実入力の物理制限
                     ],
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _handleGuestLogin(),
@@ -82,8 +83,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     height: 48,
                     child: ElevatedButton(
                       // ★ onPressed と child は “名前付き引数”。位置引数にしない
-                      onPressed:
-                          (_isLoading || !_canSubmit) ? null : _handleGuestLogin,
+                      onPressed: (_isLoading || !_canSubmit)
+                          ? null
+                          : _handleGuestLogin,
                       child: _isLoading
                           ? const SizedBox(
                               width: 18,
@@ -105,9 +107,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   Future<void> _handleGuestLogin() async {
     final name = _nameController.text.trim();
 
-    if (name.isEmpty || name.characters.length > 15) {
+    if (name.isEmpty || name.characters.length > 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ニックネームは1〜15文字で入力してください')),
+        const SnackBar(content: Text('ニックネームは1〜8文字で入力してください')),
       );
       return;
     }
