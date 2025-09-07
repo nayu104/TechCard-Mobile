@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/exchange/exchange_form.dart';
 import '../widgets/exchange/nearby_placeholder_card.dart';
+import '../widgets/exchange/nfc_card.dart';
 import '../widgets/exchange/qr_scan_card.dart';
 
 /// 名刺交換ページ。
@@ -35,6 +36,8 @@ class _ExchangePageState extends ConsumerState<ExchangePage> {
           ),
           SizedBox(height: 12),
           QrScanCard(),
+          SizedBox(height: 12),
+          NfcCard(),
           SizedBox(height: 12),
           NearbyPlaceholderCard(),
         ],

@@ -6,6 +6,7 @@ import 'package:techcard_mobile/domain/repositories.dart';
 import 'package:techcard_mobile/infrastructure/datasources/local_data_source.dart';
 import 'package:techcard_mobile/infrastructure/remotes/firebase_remote_directory.dart';
 import 'package:techcard_mobile/infrastructure/repositories/repositories_impl.dart';
+import 'package:techcard_mobile/infrastructure/services/nfc_service.dart';
 
 /// SharedPreferencesのインスタンスを提供。
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
@@ -46,3 +47,6 @@ final firebaseFirestoreProvider =
 /// リモート名刺ディレクトリのRepository（ユーザー検索用）。
 final remoteDirectoryRepositoryProvider = Provider<RemoteDirectoryRepository>(
     (ref) => FirebaseRemoteDirectory(ref.watch(firebaseFirestoreProvider)));
+
+/// NFCサービスのプロバイダー。
+final nfcServiceProvider = Provider<NfcService>((ref) => NfcService());

@@ -33,4 +33,30 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
       avatarUrl: data['avatar'] as String?,
     );
   }
+
+  @override
+
+  /// GitHub名でFirestoreを検索し、対応するContactを返す。未存在時はnull。
+  Future<Contact?> fetchByGithubUsername(String githubUsername) async {
+    final snap = await firestore
+        .collection('users')
+        .where('github', isEqualTo: githubUsername)
+        .limit(1)
+        .get();
+    if (snap.docs.isEmpty) {
+      return null;
+    }
+    final doc = snap.docs.first;
+    final data = doc.data();
+    return Contact(
+      id: doc.id,
+      name: (data['name'] as String?) ?? githubUsername,
+      userId: data['userId'] as String? ?? doc.id,
+      bio: (data['message'] as String?) ?? '',
+      githubUsername: githubUsername,
+      skills:
+          ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
+      avatarUrl: data['avatar'] as String?,
+    );
+  }
 }

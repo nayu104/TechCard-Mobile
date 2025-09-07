@@ -49,6 +49,8 @@ dependencies:
   json_annotation: ^4.9.0
   # カメラを用いたQR/バーコードスキャン。
   mobile_scanner: ^6.0.2
+  # NFC機能用。
+  nfc_manager: ^3.3.0
   # QRコードの描画・表示。
   qr_flutter: ^4.1.0
   # Riverpodのコード生成アノテーション。
