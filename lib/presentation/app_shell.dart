@@ -38,21 +38,22 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('TechCard'),
+        actionsIconTheme: const IconThemeData(color: Colors.white),
         actions: [
           // 認証状態に応じて表示を切り替え
           authState.when(
             data: (user) {
               if (user == null) {
-                // 未ログイン時：ログインボタンを表示
+                //未ログイン時
                 return Tooltip(
                   message: 'ログイン',
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.person),
-                    label: const Text('ログイン'),
+                  child: IconButton(
+                    icon: const Icon(Icons.login),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                            builder: (_) => const SignInPage()),
+                          builder: (_) => const SignInPage(),
+                        ),
                       );
                     },
                   ),
@@ -123,15 +124,16 @@ class AppShell extends ConsumerWidget {
 
     return profileAsync.when(
       data: (profile) {
-        final userName = profile?.name ?? 'ゲスト';
-        return const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Center(
-            child: Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 24,
-            ),
+        final userName = profile?.name ?? 'ゲスト'; // ★ 表示名（未設定ならゲスト）
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green),
+              const SizedBox(width: 8),
+              Text(userName, style: const TextStyle(fontWeight: FontWeight.w600)),
+            ],
           ),
         );
       },
