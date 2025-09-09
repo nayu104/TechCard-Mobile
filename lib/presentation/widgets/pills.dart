@@ -1,26 +1,7 @@
 // 目的: ステータス表示用の簡易Pill。視認性重視、タップ不可のラベル用途。
 import 'package:flutter/material.dart';
 
-class BetaPill extends StatelessWidget {
-  const BetaPill({super.key});
 
-  @override
-
-  /// β版ラベルのPillを描画。
-  Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text('β版',
-          style: TextStyle(
-              color: color, fontWeight: FontWeight.bold, fontSize: 12)),
-    );
-  }
-}
 
 class DevPill extends StatelessWidget {
   const DevPill({super.key});

@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rive/rive.dart';
+
 import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
@@ -8,28 +11,65 @@ import 'pages/settings_page.dart';
 import 'pages/sign_in.dart';
 import 'providers/providers.dart';
 
-//import 'dart:io'; // プラットフォーム判定用
+/// Rive のアニメーションを 24x24 のアイコンとして表示するウィジェット。
+/// `play` が true のときだけ再生（選択中タブだけ動く）。
+class RiveIcon extends StatefulWidget {
+  const RiveIcon({
+    super.key,
+    required this.asset,
+    required this.animationName,
+    this.play = true,
+  });
 
-/// アプリのシェル。
-/// ボトムナビゲーションとタブごとのページ（IndexedStack）を束ねる。
+  final String asset; // 例: 'assets/pendulum.riv'
+  final String animationName; // 例: 'Timeline 1'
+  final bool play;
+
+  @override
+  State<RiveIcon> createState() => _RiveIconState();
+}
+
+class _RiveIconState extends State<RiveIcon> {
+  late RiveAnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = SimpleAnimation(widget.animationName, autoplay: widget.play);
+  }
+
+  @override
+  void didUpdateWidget(covariant RiveIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 再生/停止を切り替え（選択状態によって変化）
+    if (_controller.isActive != widget.play) {
+      _controller.isActive = widget.play;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: RiveAnimation.asset(
+        widget.asset,
+        controllers: [_controller],
+        fit: BoxFit.contain,
+        alignment: Alignment.center,
+      ),
+    );
+  }
+}
+
+/// アプリのシェル。ボトムナビゲーションとタブごとのページ（IndexedStack）を束ねる。
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
 
-  //ボタンを押すと振動するようにする関数
-  // void vibrate() {
-  //   if (Platform.isIOS) {
-  //     HapticFeedback.selectionClick(); // iOS: 自然なクリック感
-  //   } else if (Platform.isAndroid) {
-  //     HapticFeedback.lightImpact(); // Android: 確実に動作する軽いバイブ
-  //   } else {
-  //     HapticFeedback.lightImpact(); // その他: デフォルト
-  //   }
-  // }
+  // // 端末の軽いバイブ例（必要なら有効化）
+  // void vibrate() => HapticFeedback.lightImpact();
 
   @override
-
-  /// ボトムナビゲーションと各ページを保持するシェルを構築。
-  /// IndexedStackで状態を保持しつつタブ切替を実現。
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
     final authState = ref.watch<AsyncValue<User?>>(authStateProvider);
@@ -39,11 +79,10 @@ class AppShell extends ConsumerWidget {
         title: const Text('TechCard'),
         actionsIconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          // 認証状態に応じて表示を切り替え
           authState.when(
             data: (user) {
               if (user == null) {
-                //未ログイン時
+                // 未ログイン
                 return Tooltip(
                   message: 'ログイン',
                   child: IconButton(
@@ -58,14 +97,13 @@ class AppShell extends ConsumerWidget {
                   ),
                 );
               } else {
-                // ログイン済み時：ユーザー名を表示
+                // ログイン済み時：ユーザー名表示
                 return _buildWelcomeMessage(ref, user.uid);
               }
             },
-            //SizedBox.shrink() は"幅0×高さ0"の箱＝画面上は何も出さないウィジェット
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
-          )
+          ),
         ],
       ),
       body: IndexedStack(
@@ -80,8 +118,8 @@ class AppShell extends ConsumerWidget {
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
           bottomNavigationBarTheme: const BottomNavigationBarThemeData(),
-          splashFactory: NoSplash.splashFactory, // タップ時のフラッシュ効果を無効化
-          highlightColor: Colors.transparent, // ハイライト効果を透明に
+          splashFactory: NoSplash.splashFactory, // タップ時フラッシュ無効
+          highlightColor: Colors.transparent, // ハイライト無効
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -90,23 +128,32 @@ class AppShell extends ConsumerWidget {
             ref.read(bottomNavProvider.notifier).state = value;
             // vibrate();
           },
-          items: const [
+          // Rive を使うので const は外す
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.badge_outlined),
-              activeIcon: Icon(Icons.badge),
+              icon: RiveIcon(
+                asset: 'assets/badge.riv', // ← 修正！
+                animationName: 'Timeline 1', // ← Rive 側のタイムライン名
+                play: currentIndex == 0,
+              ),
+              activeIcon: RiveIcon(
+                asset: 'assets/badge.riv', // ← 修正！
+                animationName: 'Timeline 1',
+                play: true,
+              ),
               label: '名刺',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.view_list_outlined),
               activeIcon: Icon(Icons.view_list),
               label: '一覧',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.qr_code_2_outlined),
               activeIcon: Icon(Icons.qr_code_2),
               label: '交換',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.settings_outlined),
               activeIcon: Icon(Icons.settings),
               label: '設定',
@@ -123,7 +170,7 @@ class AppShell extends ConsumerWidget {
 
     return profileAsync.when(
       data: (profile) {
-        final userName = profile?.name ?? 'ゲスト'; // ★ 表示名（未設定ならゲスト）
+        final userName = profile?.name ?? 'ゲスト';
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
@@ -131,8 +178,10 @@ class AppShell extends ConsumerWidget {
             children: [
               const Icon(Icons.check_circle, color: Colors.green),
               const SizedBox(width: 8),
-              Text(userName,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                userName,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         );

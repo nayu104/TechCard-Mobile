@@ -16,6 +16,7 @@ environment:
   sdk: '>=3.1.0 <4.0.0'
 
 dependencies:
+  rive: ^0.13.0
   # Firestore クエリ/データ取得・保存用。
   cloud_firestore: ^5.6.12
   # Firebase Callable Functions 呼び出し用。
@@ -50,7 +51,7 @@ dependencies:
   # カメラを用いたQR/バーコードスキャン。
   mobile_scanner: ^6.0.2
   # NFC機能用。
-  nfc_manager: ^3.3.0
+  nfc_manager: ^4.0.2
   # QRコードの描画・表示。
   qr_flutter: ^4.1.0
   # Riverpodのコード生成アノテーション。
@@ -80,6 +81,8 @@ dev_dependencies:
   riverpod_generator: ^2.1.0
 
 flutter:
+  assets:
+    - assets/
   # uses-material-design: マテリアルアイコンを利用可能にする設定。
   uses-material-design: true
   # assets: 画像/JSON等の静的アセット。原則 assets/ 配下に置き、フォルダ単位で登録。
