@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../../../domain/models.dart';
 import '../../providers/providers.dart';
 import '../custom_text_field.dart';
 import '../gold_gradient_button.dart';
+import 'user_preview_dialog.dart';
 
 /// ユーザーIDまたはGitHub名を入力して名刺交換を行うフォーム。
 /// 入力→サービス呼び出し→結果をトースト表示し、成功時は一覧をinvalidate。
@@ -80,16 +82,33 @@ class _ExchangeFormState extends ConsumerState<ExchangeForm> {
       ),
       const SizedBox(height: 12),
       GoldGradientButton(
-        icon: Icons.person_add_alt_1,
-        label: '名刺交換する',
+        icon: Icons.search,
+        label: 'ユーザーを検索',
         onPressed: () async {
-          final result = _searchType == SearchType.userId
-              ? await exchange.exchangeByUserId(_controller.text.trim())
-              : await exchange
-                  .exchangeByGithubUsername(_controller.text.trim());
-          await Fluttertoast.showToast(msg: result.message);
-          if (result.added) {
-            ref.invalidate(contactsProvider);
+          final searchText = _controller.text.trim();
+          if (searchText.isEmpty) {
+            await Fluttertoast.showToast(msg: 'ユーザーIDまたはGitHub名を入力してください');
+            return;
+          }
+
+          if (_searchType == SearchType.userId) {
+            // ユーザーID検索の場合はプレビューダイアログを表示
+            if (!isValidUserId(searchText)) {
+              await Fluttertoast.showToast(msg: 'ユーザーIDが不正です');
+              return;
+            }
+            showDialog<void>(
+              context: context,
+              builder: (context) => UserSearchResultDialog(userId: searchText),
+            );
+          } else {
+            // GitHub名検索の場合は従来通り直接追加
+            final result = await exchange.exchangeByGithubUsername(searchText);
+            await Fluttertoast.showToast(msg: result.message);
+            if (result.added) {
+              ref.invalidate(contactsProvider);
+              ref.invalidate(firebaseProfileProvider);
+            }
           }
         },
       ),

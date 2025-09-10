@@ -8,34 +8,35 @@ class GoldGradientButton extends StatelessWidget {
       this.icon,
       this.onPressed,
       this.enabled = true,
-      this.gradient});
+      this.gradient,
+      this.textColor});
 
   final String label;
   final IconData? icon;
   final VoidCallback? onPressed;
   final bool enabled;
   final Gradient? gradient;
+  final Color? textColor;
 
   @override
 
   /// ゴールドグラデの主要ボタンを構築。enabled=false時は非活性表示。
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final child = Container(
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
-            colors: isDark
-                ? [
-                    const Color.fromARGB(36, 64, 163, 255),
-                    const Color.fromARGB(255, 64, 163, 255),
-                  ]
-                : [
-                    const Color.fromARGB(101, 64, 93, 255),
-                    const Color.fromARGB(255, 64, 163, 255),
-                  ]),
+        gradient: gradient ?? const LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: <Color>[
+            Color(0xFFFFCC80), // orange 200 (soft cream)
+            Color(0xFFFF8F00), // amber 800 (rich orange)
+            Color(0xFFF4511E), // deep orange 400
+          ],
+          stops: <double>[0.0, 0.6, 1.0],
+        ),
         color: enabled
             ? null
             : Theme.of(context).disabledColor.withValues(alpha: 0.2),
@@ -44,11 +45,12 @@ class GoldGradientButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) Icon(icon, color: Colors.white),
+            if (icon != null) Icon(icon, color: textColor ?? Colors.black),
             if (icon != null) const SizedBox(width: 8),
             Text(label,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: textColor ?? Colors.black,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
       ),

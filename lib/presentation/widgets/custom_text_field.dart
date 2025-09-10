@@ -47,6 +47,7 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final onSurface = theme.colorScheme.onSurface;
+    final primary = theme.colorScheme.primary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -80,10 +81,10 @@ class CustomTextField extends StatelessWidget {
           floatingLabelBehavior: FloatingLabelBehavior.always,
           focusedBorder: UnderlineInputBorder(
             borderSide: focusedBorderSide ??
-                const BorderSide(color: Color.fromARGB(255, 64, 163, 255)),
+                BorderSide(color: primary, width: 2),
           ),
         ),
-        cursorColor: const Color.fromARGB(255, 64, 163, 255),
+        cursorColor: primary,
       ),
     );
   }

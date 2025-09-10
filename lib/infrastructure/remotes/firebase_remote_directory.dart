@@ -10,53 +10,127 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
 
   @override
 
-  /// userIdでFirestoreを検索し、対応するContactを返す。未存在時はnull。
-  Future<Contact?> fetchByUserId(String userId) async {
-    final snap = await firestore
-        .collection('users')
-        .where('name', isEqualTo: userId)
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) {
+  /// 入力ID（@あり/なし対応）でユーザーを検索。
+  /// 優先順: user_ids(ハンドル) -> public_profiles(ドキュメントID一致)
+  Future<Contact?> fetchByUserId(String input) async {
+    final normalized = input.replaceFirst(RegExp(r'^@'), '');
+    print('ユーザーID検索開始: $normalized');
+
+    try {
+      // 1) user_ids（ハンドル）で解決
+      final handleDoc = await firestore.collection('user_ids').doc(normalized).get();
+      if (handleDoc.exists && handleDoc.data() != null) {
+        final ownerUid = (handleDoc.data()! as Map<String, dynamic>)['ownerUid']?.toString();
+        if (ownerUid != null && ownerUid.isNotEmpty) {
+          final q = await firestore
+              .collection('public_profiles')
+              .where('ownerUid', isEqualTo: ownerUid)
+              .limit(1)
+              .get();
+          if (q.docs.isNotEmpty) {
+            final d = q.docs.first;
+            final data = d.data();
+            return Contact(
+              id: data['userId'] as String? ?? d.id,
+              name: (data['name'] as String?) ?? normalized,
+              userId: data['userId'] as String? ?? d.id,
+              bio: (data['message'] as String?) ?? '',
+              githubUsername: _extractGithubUsername(data['github'] as String?),
+              skills: ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
+              avatarUrl: data['avatar'] as String?,
+            );
+          }
+        }
+      }
+
+      // 2) フォールバック: public_profiles のdocId一致
+      final doc = await firestore.collection('public_profiles').doc(normalized).get();
+      if (!doc.exists || doc.data() == null) {
+        print('public_profilesでユーザーが見つかりませんでした: $normalized');
+        return null;
+      }
+      print('public_profilesでユーザーが見つかりました: $normalized');
+      final data = doc.data() as Map<String, dynamic>;
+      return Contact(
+        id: data['userId'] as String? ?? normalized,
+        name: (data['name'] as String?) ?? normalized,
+        userId: (data['userId'] as String?) ?? normalized,
+        bio: (data['message'] as String?) ?? '',
+        githubUsername: _extractGithubUsername(data['github'] as String?),
+        skills: ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
+        avatarUrl: data['avatar'] as String?,
+      );
+    } catch (e) {
+      print('ユーザー検索エラー: $e');
       return null;
     }
-    final doc = snap.docs.first;
-    final data = doc.data();
-    return Contact(
-      id: doc.id,
-      name: (data['name'] as String?) ?? userId,
-      userId: userId,
-      bio: (data['message'] as String?) ?? '',
-      githubUsername: (data['github'] as String?)?.toString(),
-      skills:
-          ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
-      avatarUrl: data['avatar'] as String?,
-    );
+  }
+
+  // GitHub URLからユーザー名を抽出
+  String _extractGithubUsername(String? githubUrl) {
+    if (githubUrl == null || githubUrl.isEmpty) {
+      return '';
+    }
+    final uri = Uri.tryParse(githubUrl);
+    if (uri == null) {
+      return '';
+    }
+    final pathSegments = uri.pathSegments;
+    if (pathSegments.isNotEmpty) {
+      return pathSegments.first;
+    }
+    return '';
   }
 
   @override
 
   /// GitHub名でFirestoreを検索し、対応するContactを返す。未存在時はnull。
   Future<Contact?> fetchByGithubUsername(String githubUsername) async {
-    final snap = await firestore
-        .collection('users')
-        .where('github', isEqualTo: githubUsername)
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) {
+    print('GitHub名検索開始: $githubUsername');
+
+    try {
+      // Firestoreの 'github' フィールドには多くの場合フルURLが格納されるため、
+      // よくあるURLパターンも含めて検索する。
+      final candidates = <String>{
+        githubUsername,
+        'https://github.com/$githubUsername',
+        'http://github.com/$githubUsername',
+        'https://www.github.com/$githubUsername',
+        'http://www.github.com/$githubUsername',
+      }.toList();
+
+      print('GitHub名検索: 試行候補=${candidates.join(', ')}');
+
+      // whereIn は最大 10 要素まで。今回の候補は5件なので安全。
+      final query = firestore
+          .collection('public_profiles')
+          .where('github', whereIn: candidates)
+          .limit(1);
+
+      final snap = await query.get();
+
+      if (snap.docs.isEmpty) {
+        print('public_profilesでGitHub名が見つかりませんでした: $githubUsername');
+        return null;
+      }
+
+      final doc = snap.docs.first;
+      print('public_profilesでGitHub名が見つかりました: ${doc.id}');
+      final data = doc.data();
+
+      return Contact(
+        id: data['userId'] as String? ?? doc.id,
+        name: (data['name'] as String?) ?? githubUsername,
+        userId: data['userId'] as String? ?? doc.id,
+        bio: (data['message'] as String?) ?? '',
+        githubUsername: _extractGithubUsername(data['github'] as String?),
+        skills:
+            ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
+        avatarUrl: data['avatar'] as String?,
+      );
+    } catch (e) {
+      print('GitHub名検索エラー: $e');
       return null;
     }
-    final doc = snap.docs.first;
-    final data = doc.data();
-    return Contact(
-      id: doc.id,
-      name: (data['name'] as String?) ?? githubUsername,
-      userId: data['userId'] as String? ?? doc.id,
-      bio: (data['message'] as String?) ?? '',
-      githubUsername: githubUsername,
-      skills:
-          ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
-      avatarUrl: data['avatar'] as String?,
-    );
   }
 }

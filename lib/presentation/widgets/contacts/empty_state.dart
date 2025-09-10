@@ -4,18 +4,29 @@ import 'package:flutter/material.dart';
 /*
 /// 名刺が0件のときのプレースホルダ。交換画面への誘導ボタンを持つ。
 class ContactsEmptyState extends StatelessWidget {
-  const ContactsEmptyState({super.key, required this.onTapExchange});
+  const ContactsEmptyState({
+    super.key,
+    required this.onTapExchange,
+    this.isLoading = false,
+  });
   final VoidCallback onTapExchange;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const Icon(Icons.contact_page_outlined, size: 64),
-        const SizedBox(height: 8),
-        const Text('まだ名刺がありません'),
-        const SizedBox(height: 16),
-        FilledButton(onPressed: onTapExchange, child: const Text('名刺を交換する')),
+        if (isLoading) ...[
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          const Text('名刺を読み込み中...'),
+        ] else ...[
+          Image.asset('assets/ui_image/no_card.png', width: 180),
+          const SizedBox(height: 8),
+          const Text('まだ名刺がありません'),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: onTapExchange, child: const Text('名刺を交換する')),
+        ],
       ]),
     );
   }

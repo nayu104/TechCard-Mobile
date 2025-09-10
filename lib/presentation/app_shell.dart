@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
 import 'pages/my_card_page.dart';
@@ -8,28 +10,14 @@ import 'pages/settings_page.dart';
 import 'pages/sign_in.dart';
 import 'providers/providers.dart';
 
-//import 'dart:io'; // プラットフォーム判定用
-
-/// アプリのシェル。
-/// ボトムナビゲーションとタブごとのページ（IndexedStack）を束ねる。
+/// アプリのシェル。ボトムナビゲーションとタブごとのページ（IndexedStack）を束ねる。
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
 
-  //ボタンを押すと振動するようにする関数
-  // void vibrate() {
-  //   if (Platform.isIOS) {
-  //     HapticFeedback.selectionClick(); // iOS: 自然なクリック感
-  //   } else if (Platform.isAndroid) {
-  //     HapticFeedback.lightImpact(); // Android: 確実に動作する軽いバイブ
-  //   } else {
-  //     HapticFeedback.lightImpact(); // その他: デフォルト
-  //   }
-  // }
+  // // 端末の軽いバイブ例（必要なら有効化）
+  // void vibrate() => HapticFeedback.lightImpact();
 
   @override
-
-  /// ボトムナビゲーションと各ページを保持するシェルを構築。
-  /// IndexedStackで状態を保持しつつタブ切替を実現。
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavProvider);
     final authState = ref.watch<AsyncValue<User?>>(authStateProvider);
@@ -39,11 +27,10 @@ class AppShell extends ConsumerWidget {
         title: const Text('TechCard'),
         actionsIconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          // 認証状態に応じて表示を切り替え
           authState.when(
             data: (user) {
               if (user == null) {
-                //未ログイン時
+                // 未ログイン
                 return Tooltip(
                   message: 'ログイン',
                   child: IconButton(
@@ -58,14 +45,13 @@ class AppShell extends ConsumerWidget {
                   ),
                 );
               } else {
-                // ログイン済み時：ユーザー名を表示
+                // ログイン済み時：ユーザー名表示
                 return _buildWelcomeMessage(ref, user.uid);
               }
             },
-            //SizedBox.shrink() は"幅0×高さ0"の箱＝画面上は何も出さないウィジェット
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
-          )
+          ),
         ],
       ),
       body: IndexedStack(
@@ -79,9 +65,21 @@ class AppShell extends ConsumerWidget {
       ),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
-          bottomNavigationBarTheme: const BottomNavigationBarThemeData(),
-          splashFactory: NoSplash.splashFactory, // タップ時のフラッシュ効果を無効化
-          highlightColor: Colors.transparent, // ハイライト効果を透明に
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            selectedItemColor: const Color(0xFFFF8F00), // 橙（ダークでも視認性高）
+            unselectedItemColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white70
+                : Colors.black54,
+            selectedIconTheme: const IconThemeData(color: Color(0xFFFF8F00)),
+            unselectedIconTheme: IconThemeData(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.black54,
+            ),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          splashFactory: NoSplash.splashFactory, // タップ時フラッシュ無効
+          highlightColor: Colors.transparent, // ハイライト無効
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -92,8 +90,8 @@ class AppShell extends ConsumerWidget {
           },
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.badge_outlined),
-              activeIcon: Icon(Icons.badge),
+              icon: Icon(Icons.credit_card_outlined),
+              activeIcon: Icon(Icons.credit_card),
               label: '名刺',
             ),
             BottomNavigationBarItem(
@@ -123,7 +121,7 @@ class AppShell extends ConsumerWidget {
 
     return profileAsync.when(
       data: (profile) {
-        final userName = profile?.name ?? 'ゲスト'; // ★ 表示名（未設定ならゲスト）
+        final userName = profile?.name ?? 'ゲスト';
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
@@ -131,8 +129,10 @@ class AppShell extends ConsumerWidget {
             children: [
               const Icon(Icons.check_circle, color: Colors.green),
               const SizedBox(width: 8),
-              Text(userName,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                userName,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         );

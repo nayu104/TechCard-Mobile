@@ -40,13 +40,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('サインイン'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -56,11 +49,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'TechCard',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  Image.asset(
+                    'assets/ui_image/tech_card_02.png',
+                    height: 250,
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 32),
 
                   // ★ CustomTextField の引数は “名前付き” で、カンマ/カッコを揃える
                   CustomTextField(
@@ -80,19 +73,45 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   SizedBox(
                     width: double.infinity,
                     height: 48,
-                    child: ElevatedButton(
-                      // ★ onPressed と child は “名前付き引数”。位置引数にしない
-                      onPressed: (_isLoading || !_canSubmit)
-                          ? null
-                          : _handleGuestLogin,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('ゲストでログイン'),
-                    ),
+                    child: Builder(builder: (context) {
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      final fg = isDark ? Colors.white : Colors.black;
+                      return ElevatedButton(
+                        onPressed: (_isLoading || !_canSubmit) ? null : _handleGuestLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).cardColor,
+                          foregroundColor: fg,
+                          shape: const StadiumBorder(),
+                          elevation: 0,
+                          side: const BorderSide(color: Colors.black, width: 1.2),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Image.asset(
+                                  //   'assets/ui_image/login_icon.png',
+                                  //   height: 30,
+                                  //   fit: BoxFit.contain,
+                                  // ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'はじめる',
+                                    style: TextStyle(
+                                      color: fg,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      );
+                    }),
                   ),
 
                   const SizedBox(height: 24),
@@ -103,25 +122,45 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton.icon(
-                      //押したら案内が出る
-                      onPressed: () {
-                        //ボタンを押したときひょっこっとメッセージ
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Github未実装ちょま')),
-                        );
-                      },
-                      icon: const Icon(Icons.code,
-                          color: Colors.white), //Githubアイコン代用
-                      label: const Text(
-                        'Githubでログイン',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              setState(() => _isLoading = true);
+                              try {
+                                final login = ref.read(githubLoginProvider);
+                                await login();
+                                if (!mounted) return;
+                                Navigator.of(context).pop();
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('GitHubログインに失敗しました: $e')),
+                                );
+                              } finally {
+                                if (mounted) setState(() => _isLoading = false);
+                              }
+                            },
+                      icon: Image.asset(
+                        'assets/ui_image/github-mark-white.png',
+                        height: 22,
+                        fit: BoxFit.contain,
                       ),
+                      label: _isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text(
+                              'Githubでログイン',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
                       //ボタンの見た目
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         foregroundColor: Colors.white, //文字色
                         shape: const StadiumBorder(),
-                        textStyle: const TextStyle(fontSize: 16),
+                        textStyle: const TextStyle(fontSize: 14),
                         elevation: 0,
                       ),
                     ),

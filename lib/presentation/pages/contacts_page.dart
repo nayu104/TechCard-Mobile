@@ -21,6 +21,7 @@ class ContactsPage extends ConsumerStatefulWidget {
 class _ContactsPageState extends ConsumerState<ContactsPage> {
   final Map<String, bool> _expanded = {};
   var _showAll = false; // 全件表示フラグ
+  bool _isRefreshing = false; // リフレッシュ状態
 
   /// 「もっと見る」ボタンを構築
   Widget _buildLoadMoreButton(int totalCount) {
@@ -64,194 +65,254 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
     );
   }
 
+  /// 名刺一覧タブ
+  Widget _buildContactsTab(BuildContext context) {
+    final contactsAsync = ref.watch(firebaseContactsProvider);
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() => _isRefreshing = true);
+        try {
+          ref.invalidate(firebaseContactsProvider);
+          await ref.read(firebaseContactsProvider.future);
+        } finally {
+          if (mounted) setState(() => _isRefreshing = false);
+        }
+      },
+      child: contactsAsync.when(
+        loading: () => const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('名刺を読み込み中...'),
+            ],
+          ),
+        ),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('読み込みに失敗しました', style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 8),
+              Text('エラー: $e',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(firebaseContactsProvider),
+                child: const Text('再試行'),
+              ),
+            ],
+          ),
+        ),
+        data: (contacts) {
+          if (contacts.isEmpty) {
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: ContactsEmptyState(
+                  onTapExchange: () =>
+                      ref.read(bottomNavProvider.notifier).state = 2,
+                  isLoading: _isRefreshing,
+                ),
+              ),
+            );
+          }
+          return CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Card(
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(children: [
+                        Icon(Icons.contacts,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 28),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('名刺一覧',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(
+                                _showAll
+                                    ? '${contacts.length}枚の名刺（全件表示）'
+                                    : '${contacts.length}枚の名刺（${contacts.take(5).length}件表示中）',
+                                style: TextStyle(
+                                    color: Colors.grey[600], fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text('${contacts.length}',
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16)),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final displayContacts =
+                          _showAll ? contacts : contacts.take(5).toList();
+                      if (index < displayContacts.length) {
+                        final contact = displayContacts[index];
+                        final isOpen = _expanded[contact.id] ?? false;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: ContactListItem(
+                            key: ValueKey(contact.id),
+                            contact: contact,
+                            isOpen: isOpen,
+                            onTap: () {
+                              setState(() {
+                                _expanded[contact.id] = !isOpen;
+                              });
+                            },
+                          ),
+                        );
+                      } else {
+                        return _buildLoadMoreButton(contacts.length);
+                      }
+                    },
+                    childCount: _showAll
+                        ? contacts.length
+                        : contacts.length > 5
+                            ? 6
+                            : contacts.length,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 200)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 交換申請タブ
+  Widget _buildRequestsTab(BuildContext context) {
+    final requestsAsync = ref.watch(friendRequestsProvider);
+    final accept = ref.read(acceptFriendRequestActionProvider);
+    final decline = ref.read(declineFriendRequestActionProvider);
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(friendRequestsProvider);
+        await ref.read(friendRequestsProvider.future);
+      },
+      child: requestsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('読み込みに失敗しました: $e')),
+        data: (requests) {
+          if (requests.isEmpty) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 120),
+                Center(child: Image(image: AssetImage('assets/ui_image/no_request.png'), width: 160)),
+                SizedBox(height: 8),
+                Center(child: Text('交換申請はありません')),
+                SizedBox(height: 200),
+              ],
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: requests.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final req = requests[index];
+              final id = req['id'] as String;
+              final senderUserId = req['senderUserId']?.toString() ?? '';
+              final createdAt = req['createdAt'];
+              return Card(
+                child: ListTile(
+                  leading: const Icon(Icons.person_add_alt_1),
+                  title: Text('@$senderUserId からの申請'),
+                  subtitle: Text(createdAt != null ? '受信: $createdAt' : ''),
+                  trailing: Wrap(spacing: 8, children: [
+                    OutlinedButton(
+                      onPressed: () async {
+                        await decline(id);
+                      },
+                      child: const Text('見送る'),
+                    ),
+                    FilledButton(
+                      onPressed: () async {
+                        await accept(id);
+                      },
+                      child: const Text('承認'),
+                    ),
+                  ]),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
   /// 名刺一覧を取得し、展開/折りたたみ可能なリストを描画する。
   @override
   Widget build(BuildContext context) {
-    // Firebaseから名刺一覧を取得
-    // getContactsメソッドを使用
-    final contactsAsync = ref.watch(firebaseContactsProvider);
-
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Firebaseから差分取得（プロバイダーを無効化して再取得）
-          ref.invalidate(firebaseContactsProvider);
-          // プロバイダーの完了を待つ
-          await ref.read(firebaseContactsProvider.future);
-        },
-        child: contactsAsync.when(
-          loading: () => const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('名刺を読み込み中...'),
-              ],
-            ),
-          ),
-          error: (e, _) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Colors.red,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  '読み込みに失敗しました',
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'エラー: $e',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    ref.invalidate(firebaseContactsProvider);
-                  },
-                  child: const Text('再試行'),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Container(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            child: TabBar(
+              tabs: [
+                const Tab(text: '名刺一覧'),
+                Tab(
+                  text: ref.watch(friendRequestsCountProvider) > 0
+                      ? '交換申請 (${ref.watch(friendRequestsCountProvider)})'
+                      : '交換申請',
                 ),
               ],
             ),
           ),
-          data: (contacts) {
-            if (contacts.isEmpty) {
-              return ContactsEmptyState(
-                onTapExchange: () {
-                  ref.read(bottomNavProvider.notifier).state = 2;
-                },
-              );
-            }
-            return CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(), // プルトゥリフレッシュを有効化
-              slivers: [
-                // ヘッダー部分
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Card(
-                      elevation: 2,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.contacts,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 28,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    '名刺一覧',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _showAll
-                                        ? '${contacts.length}枚の名刺（全件表示）'
-                                        : '${contacts.length}枚の名刺'
-                                            '（${contacts.take(5).length}件表示中）',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${contacts.length}',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // 名刺リスト
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        // 表示する名刺のリストを決定
-                        final displayContacts =
-                            _showAll ? contacts : contacts.take(5).toList();
-
-                        if (index < displayContacts.length) {
-                          final contact = displayContacts[index];
-                          final isOpen = _expanded[contact.id] ?? false;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: ContactListItem(
-                              key: ValueKey(contact.id),
-                              contact: contact,
-                              isOpen: isOpen,
-                              onTap: () {
-                                setState(() {
-                                  _expanded[contact.id] = !isOpen;
-                                });
-                              },
-                            ),
-                          );
-                        } else {
-                          // 「もっと見る」ボタン
-                          return _buildLoadMoreButton(contacts.length);
-                        }
-                      },
-                      childCount: _showAll
-                          ? contacts.length
-                          : contacts.length > 5
-                              ? 6 // 5件 + もっと見るボタン
-                              : contacts.length,
-                    ),
-                  ),
-                ),
-                // 下部余白（プルトゥリフレッシュ用）
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height *
-                        0.3, // 画面の30%の高さを確保
-                  ),
-                ),
-              ],
-            );
-          },
+        ),
+        body: TabBarView(
+          children: [
+            _buildContactsTab(context),
+            _buildRequestsTab(context),
+          ],
         ),
       ),
     );
