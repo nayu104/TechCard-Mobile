@@ -29,10 +29,10 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
     final async = ref.watch(mapExchangesProvider);
 
     return async.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => _buildLoadingBanner(),
+      error: (_, __) => _buildErrorBanner(),
       data: (items) {
-        if (items.isEmpty) return const SizedBox.shrink();
+        if (items.isEmpty) return _buildEmptyBanner();
 
         return Column(
           children: [
@@ -142,11 +142,40 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
     );
     return LatLngBounds(southwest: sw, northeast: ne);
   }
+
+  Widget _buildLoadingBanner() {
+    return _CollapsedBanner(
+      count: 0,
+      isLoading: true,
+    );
+  }
+
+  Widget _buildErrorBanner() {
+    return _CollapsedBanner(
+      count: 0,
+      hasError: true,
+    );
+  }
+
+  Widget _buildEmptyBanner() {
+    return _CollapsedBanner(
+      count: 0,
+      isEmpty: true,
+    );
+  }
 }
 
 class _CollapsedBanner extends StatelessWidget {
-  const _CollapsedBanner({required this.count});
+  const _CollapsedBanner({
+    required this.count,
+    this.isLoading = false,
+    this.hasError = false,
+    this.isEmpty = false,
+  });
   final int count;
+  final bool isLoading;
+  final bool hasError;
+  final bool isEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +212,7 @@ class _CollapsedBanner extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 2),
               Text(
-                count > 0 ? '過去の交換地点を地図で確認できます' : '交換履歴がまだありません',
+                _getBannerText(),
                 style: TextStyle(
                     color: textColor.withValues(alpha: 0.7), fontSize: 12),
               )
@@ -193,5 +222,17 @@ class _CollapsedBanner extends StatelessWidget {
         const Icon(Icons.keyboard_arrow_down),
       ],
     );
+  }
+
+  String _getBannerText() {
+    if (isLoading) {
+      return '交換履歴を読み込み中...';
+    } else if (hasError) {
+      return '交換履歴の読み込みに失敗しました';
+    } else if (isEmpty) {
+      return '交換履歴がまだありません。名刺交換をしてみましょう！';
+    } else {
+      return '過去の交換地点を地図で確認できます';
+    }
   }
 }

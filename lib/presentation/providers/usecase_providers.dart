@@ -37,7 +37,29 @@ final mapExchangesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) as
   final exchanges = await ref.watch(exchangesProvider.future);
   final contacts = await ref.watch(firebaseContactsProvider.future);
   final contactIds = contacts.map((c) => c.userId).toSet();
-  return exchanges.where((e) => contactIds.contains(e['peerUserId'] as String? ?? '')).toList();
+  final filteredExchanges = exchanges.where((e) => contactIds.contains(e['peerUserId'] as String? ?? '')).toList();
+  
+  // テスト用: 交換履歴がない場合はダミーデータを表示
+  if (filteredExchanges.isEmpty) {
+    return [
+      {
+        'id': 'test1',
+        'peerName': 'テストユーザー1',
+        'peerUserId': 'test_user_1',
+        'exchangedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+        'location': GeoPoint(35.681236, 139.767125), // 東京駅
+      },
+      {
+        'id': 'test2', 
+        'peerName': 'テストユーザー2',
+        'peerUserId': 'test_user_2',
+        'exchangedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 3))),
+        'location': GeoPoint(35.658581, 139.745438), // 浅草寺
+      },
+    ];
+  }
+  
+  return filteredExchanges;
 });
 
 // 交換申請（受信）件数
