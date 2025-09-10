@@ -13,6 +13,7 @@ import '../widgets/my_card/actions_row.dart';
 import '../widgets/my_card/activities_list.dart';
 import '../widgets/my_card/profile_header_card.dart';
 import '../widgets/my_card/stat_card.dart';
+import '../widgets/my_card/exchange_map_banner.dart';
 import '../widgets/pills.dart';
 import '../widgets/skills/editable_skills.dart';
 
@@ -30,6 +31,9 @@ class MyCardPage extends ConsumerWidget {
 
     final isEditing = ref.watch(isEditingProvider);
     final profileAsync = ref.watch(firebaseProfileProvider);
+    // 統計用: 名刺数（つながり）と今月の交換回数
+    final contactsAsync = ref.watch(firebaseContactsProvider);
+    final activitiesAsync = ref.watch(activitiesProvider);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -114,16 +118,43 @@ class MyCardPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   ActionsRow(
-                    // ADDED COMMENT: ハンドルは GitHub ではなく userId を表示/コピー
+                    // 公開プロフィールの userId を表示/コピー（Firebase AuthのUIDではない）
                     handleText: profile?.userId ?? '',
                     readHandle: () => profile?.userId ?? '',
                   ),
                   const SizedBox(height: 12),
-                  const Row(children: [
-                    Expanded(child: StatCard(title: 'つながり', value: '4')),
-                    SizedBox(width: 12),
-                    Expanded(child: StatCard(title: '今月の交換', value: '3')),
+                  Row(children: [
+                    Expanded(
+                      child: StatCard(
+                        title: 'つながり',
+                        value: contactsAsync.maybeWhen(
+                          data: (list) => list.length.toString(),
+                          orElse: () => '0',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: StatCard(
+                        title: '今月の交換',
+                        value: activitiesAsync.maybeWhen(
+                          data: (list) {
+                            final now = DateTime.now();
+                            final count = list.where((a) {
+                              final dt = a.occurredAt;
+                              final sameMonth = dt.year == now.year && dt.month == now.month;
+                              return sameMonth && a.kind == ActivityKind.exchange;
+                            }).length;
+                            return count.toString();
+                          },
+                          orElse: () => '0',
+                        ),
+                      ),
+                    ),
                   ]),
+                  const SizedBox(height: 12),
+                  // 交換マップバナー（タップで展開して地図を表示）
+                  const ExchangeMapBanner(),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

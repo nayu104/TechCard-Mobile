@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   // FirebaseAuthのインスタンスを取得
@@ -34,4 +35,23 @@ class AuthService {
   // ユーザーID取得
   // 戻り値: UID文字列 / null（未ログイン時）
   String? get currentUid => _auth.currentUser?.uid;
+}
+  
+extension GithubSignIn on AuthService {
+  Future<UserCredential> signInWithGithub() async {
+    try {
+      final provider = GithubAuthProvider()
+        ..addScope('read:user')
+        ..addScope('user:email')
+        ..setCustomParameters({'allow_signup': 'false'});
+
+      if (kIsWeb) {
+        return await _auth.signInWithPopup(provider);
+      } else {
+        return await _auth.signInWithProvider(provider);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../domain/entities/contact.dart';
 import '../../domain/entities/public_profile.dart';
@@ -20,8 +21,6 @@ class UserRepositoryImpl {
       if (!doc.exists || doc.data() == null) {
         return null;
       }
-
-      //
       return MyProfile.fromJson(doc.data()!);
     } on Exception {
       // ユーザープロフィール取得エラー
@@ -29,21 +28,245 @@ class UserRepositoryImpl {
     }
   }
 
+  // 現在の表示用ハンドル（handle）を取得（存在しない場合はnull）
+  Future<String?> getCurrentHandle(String userId) async {
+    try {
+      final doc = await _db.collection('public_profiles').doc(userId).get();
+      if (!doc.exists || doc.data() == null) return null;
+      final data = doc.data()! as Map<String, dynamic>;
+      final h = data['handle'];
+      return h is String && h.isNotEmpty ? h : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // 6〜15桁のランダム数値ハンドルを生成
+  String _generateNumericHandle() {
+    final now = DateTime.now().microsecondsSinceEpoch.toString();
+    // 乱数ソースとして時刻とランダム値を混ぜる
+    final seed = now + (DateTime.now().millisecondsSinceEpoch % 1000000).toString();
+    // 数字のみを抽出して長さを調整（6〜15桁）
+    final digits = seed.replaceAll(RegExp(r'[^0-9]'), '');
+    final len = 6 + (digits.hashCode.abs() % 10); // 6..15
+    return digits.padRight(len, '0').substring(0, len);
+  }
+
+  // 利用可能な数値ハンドルを探して返す（最大5回試行）
+  Future<String> _generateAvailableNumericHandle() async {
+    for (var i = 0; i < 5; i++) {
+      final candidate = _generateNumericHandle();
+      final exists = await _db.collection('user_ids').doc(candidate).get();
+      if (!exists.exists) return candidate;
+    }
+    // 最後は Firestore の自動IDを数値化して返す
+    final auto = _db.collection('user_ids').doc().id.replaceAll(RegExp(r'[^0-9]'), '');
+    return (auto.length >= 6 ? auto.substring(0, 15) : auto.padRight(6, '0'));
+  }
+
+  // 初期ハンドルの割当（user_ids予約 + public_profiles.handle を設定）
+  Future<String> assignInitialHandle({required String uid, required String userId}) async {
+    final handle = await _generateAvailableNumericHandle();
+    await _db.runTransaction((txn) async {
+      final handleRef = _db.collection('user_ids').doc(handle);
+      final handleSnap = await txn.get(handleRef);
+      if (handleSnap.exists) {
+        throw Exception('handle already taken');
+      }
+      txn.set(handleRef, {
+        'ownerUid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      final pubRef = _db.collection('public_profiles').doc(userId);
+      txn.set(pubRef, {
+        'handle': handle,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+    return handle;
+  }
+
+  // ハンドル更新（トランザクション）：予約 + 旧ハンドル解放 + public_profiles更新
+  Future<void> updateHandleAtomic({
+    required String uid,
+    required String userId,
+    required String? oldHandle,
+    required String newHandle,
+  }) async {
+    // 正規化: 先頭@を除去
+    final normalized = newHandle.replaceFirst(RegExp(r'^@'), '');
+    // 形式チェック（クライアント側）
+    if (!RegExp(r'^[A-Za-z0-9_-]{6,30}$').hasMatch(normalized)) {
+      throw ArgumentError('invalid_handle_format');
+    }
+    await _db.runTransaction((txn) async {
+      final newRef = _db.collection('user_ids').doc(normalized);
+      final newSnap = await txn.get(newRef);
+      if (newSnap.exists) {
+        throw Exception('handle_taken');
+      }
+      // 予約
+      txn.set(newRef, {
+        'ownerUid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // 旧ハンドル解放（自分の所有のみ）
+      if (oldHandle != null && oldHandle.isNotEmpty) {
+        final oldRef = _db.collection('user_ids').doc(oldHandle);
+        final oldSnap = await txn.get(oldRef);
+        if (oldSnap.exists && (oldSnap.data() as Map<String, dynamic>)['ownerUid'] == uid) {
+          txn.delete(oldRef);
+        }
+      }
+
+      // public_profilesに反映
+      final pubRef = _db.collection('public_profiles').doc(userId);
+      txn.set(pubRef, {
+        'handle': normalized,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    });
+  }
+
+  // 交換申請（フレンドリクエスト）作成
+  Future<void> sendFriendRequest({
+    required String senderUid,
+    required String senderUserId,
+    required String receiverUid,
+    required String receiverUserId,
+  }) async {
+    final now = DateTime.now();
+    try {
+      print('友達申請送信: sender=$senderUid(@$senderUserId) -> receiver=$receiverUid(@$receiverUserId)');
+      await _db.collection('friend_requests').add({
+        'senderUid': senderUid,
+        'senderUserId': senderUserId,
+        'receiverUid': receiverUid,
+        'receiverUserId': receiverUserId,
+        'status': 'pending',
+        'createdAt': now,
+        'updatedAt': now,
+      });
+    } on Exception catch (e) {
+      print('友達申請送信エラー: $e');
+      rethrow;
+    }
+  }
+
+  // 受信した交換申請の取得（pendingのみ）
+  Future<List<Map<String, dynamic>>> getIncomingRequests(String uid) async {
+    try {
+      final snap = await _db
+          .collection('friend_requests')
+          .where('receiverUid', isEqualTo: uid)
+          .where('status', isEqualTo: 'pending')
+          .orderBy('createdAt', descending: true)
+          .get();
+      return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+    } on Exception catch (e) {
+      print('受信申請取得エラー: $e');
+      return [];
+    }
+  }
+
+  // 申請の状態更新（cancel/decline/accept 等）
+  Future<void> updateFriendRequestStatus(String requestId, String status) async {
+    try {
+      await _db.collection('friend_requests').doc(requestId).update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on Exception catch (e) {
+      print('申請更新エラー: $e');
+      rethrow;
+    }
+  }
+
+  // 承認時処理: 相互にfriend_idsへ追加 + リクエストをacceptedへ
+  Future<void> acceptFriendRequest(String requestId) async {
+    try {
+      final doc = await _db.collection('friend_requests').doc(requestId).get();
+      if (!doc.exists || doc.data() == null) {
+        throw Exception('request not found');
+      }
+      final data = doc.data()!;
+      final senderUid = data['senderUid'] as String;
+      final receiverUid = data['receiverUid'] as String;
+      final senderUserId = data['senderUserId'] as String;
+      final receiverUserId = data['receiverUserId'] as String;
+
+      final batch = _db.batch();
+      final reqRef = _db.collection('friend_requests').doc(requestId);
+      batch.update(reqRef, {
+        'status': 'accepted',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // 双方向にfriend_ids追加
+      final senderRef = _db.collection('users_v01').doc(senderUid);
+      final receiverRef = _db.collection('users_v01').doc(receiverUid);
+      batch.set(senderRef, {
+        'friend_ids': FieldValue.arrayUnion([receiverUserId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      batch.set(receiverRef, {
+        'friend_ids': FieldValue.arrayUnion([senderUserId]),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await batch.commit();
+      print('申請承認完了: $requestId');
+    } on Exception catch (e) {
+      print('申請承認エラー: $e');
+      rethrow;
+    }
+  }
+
+  // フレンド追加（自分のusers_v01にfriend_idsを追記）
+  // arrayUnionで重複なく安全に追加する
+  Future<void> addFriend(String uid, String friendUserId) async {
+    try {
+      print('フレンド追加開始: uid=$uid, friendUserId=$friendUserId');
+      final docRef = _db.collection('users_v01').doc(uid);
+      try {
+        // 既存ドキュメント想定の通常パス
+        await docRef.update({
+          'friend_ids': FieldValue.arrayUnion([friendUserId]),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } on Exception {
+        // 未作成の場合はmergeで作成しつつ追記
+        await docRef.set({
+          'friend_ids': FieldValue.arrayUnion([friendUserId]),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      print('フレンド追加完了');
+    } on Exception catch (e) {
+      print('フレンド追加エラー: $e');
+      rethrow;
+    }
+  }
+
   // プライベートプロフィール保存
   // 処理: users_v01への保存 + public_profilesへの同期
   Future<void> saveUserProfile(String uid, MyProfile profile) async {
+    print('プロフィール保存開始: UID=$uid, userId=${profile.userId}');
     final batch = _db.batch();
 
     try {
       // 1. プライベートデータを保存（users_v01/{uid}）
       final userDoc = _db.collection('users_v01').doc(uid);
       batch.set(userDoc, profile.toJson());
+      print('users_v01に保存予定: ${profile.toJson()}');
 
       // 2. 公開データを同期（public_profiles/{userId}）他人の名刺として参照される
       //    - MyProfile → PublicProfile変換でプライベート情報を除外
       final publicProfile = _createPublicProfile(profile, uid);
       final publicDoc = _db.collection('public_profiles').doc(profile.userId);
       batch.set(publicDoc, publicProfile.toJson());
+      print('public_profilesに保存予定: ${publicProfile.toJson()}');
 
       // 3. userId予約テーブル更新（user_ids/{userId}）
       final userIdDoc = _db.collection('user_ids').doc(profile.userId);
@@ -51,10 +274,13 @@ class UserRepositoryImpl {
         'ownerUid': uid,
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      print('user_idsに保存予定: ownerUid=$uid');
 
       // 4. 一括実行（全て成功 or 全て失敗）
       await batch.commit();
-    } on Exception {
+      print('プロフィール保存完了');
+    } on Exception catch (e) {
+      print('プロフィール保存エラー: $e');
       // ユーザープロフィール保存エラー
       rethrow;
     }
@@ -82,9 +308,16 @@ class UserRepositoryImpl {
   // 意図: 効率的な一括取得でパフォーマンスを向上させる
   Future<List<Contact>> getContacts(String uid) async {
     try {
-      // 1. ユーザーのプロフィールを取得してfriendIdsを取得
-      final userProfile = await getUserProfile(uid);
-      if (userProfile == null || userProfile.friendIds.isEmpty) {
+      // 1. users_v01/{uid} から friend_ids を直接取得（スキーマに依存しない）
+      final userDoc = await _db.collection('users_v01').doc(uid).get();
+      if (!userDoc.exists || userDoc.data() == null) {
+        return [];
+      }
+      final data = userDoc.data()!;
+      final friendIds = ((data['friend_ids'] as List?) ?? [])
+          .map((e) => e.toString())
+          .toList();
+      if (friendIds.isEmpty) {
         return [];
       }
 
@@ -92,7 +325,6 @@ class UserRepositoryImpl {
       // 背景: 個別取得（N+1問題）を避けてネットワーク効率を向上
       // 意図: 1回のクエリで全友達のプロフィールを取得
       //初期取得時に利用
-      final friendIds = userProfile.friendIds;
 
       // FirestoreのwhereInクエリで一括取得
       final querySnapshot = await _db

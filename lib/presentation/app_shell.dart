@@ -117,7 +117,19 @@ class AppShell extends ConsumerWidget {
       ),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
-          bottomNavigationBarTheme: const BottomNavigationBarThemeData(),
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            selectedItemColor: const Color(0xFFFF8F00), // 橙（ダークでも視認性高）
+            unselectedItemColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white70
+                : Colors.black54,
+            selectedIconTheme: const IconThemeData(color: Color(0xFFFF8F00)),
+            unselectedIconTheme: IconThemeData(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.black54,
+            ),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          ),
           splashFactory: NoSplash.splashFactory, // タップ時フラッシュ無効
           highlightColor: Colors.transparent, // ハイライト無効
         ),

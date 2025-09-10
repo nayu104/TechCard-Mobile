@@ -32,12 +32,32 @@ class ActivitiesList extends ConsumerWidget {
           ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
         final show = sorted.take(10).toList();
         if (show.isEmpty) {
-          return Text('活動はまだありません',
-              style: TextStyle(color: Theme.of(context).hintColor));
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Image.asset('assets/ui_image/no_activity.png', width: 160),
+              const SizedBox(height: 8),
+              Text('活動はまだありません',
+                  style: TextStyle(color: Theme.of(context).hintColor)),
+            ],
+          );
         }
         return Column(
           children: show
-              .map((a) => ActivityTile(a.title, _relative(a.occurredAt)))
+              .map((a) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Card(
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ActivityTile(
+                        a.title,
+                        _relative(a.occurredAt),
+                      ),
+                    ),
+                  ))
               .toList(),
         );
       },
