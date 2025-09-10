@@ -1,0 +1,40 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.4'
+        channel: 'stable'
+    
+    - name: Install dependencies
+      run: flutter pub get
+    
+    - name: Run tests
+      run: flutter test
+    
+    - name: Analyze code
+      run: flutter analyze
+    
+    - name: Build APK
+      run: flutter build apk --release
+      env:
+        WEB_GOOGLE_MAPS_API_KEY: ${{ secrets.WEB_GOOGLE_MAPS_API_KEY }}
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: build/app/outputs/flutter-apk/app-release.apk

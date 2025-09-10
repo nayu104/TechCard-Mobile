@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/contact.dart';
 import '../../domain/entities/public_profile.dart';
 import '../../domain/entities/user_profile.dart';
+import '../services/location_service.dart';
 
 // ユーザープロフィールのFirestore操作を担当
 // 役割: users_v01（プライベート）とpublic_profiles（公開）の連携管理
@@ -229,9 +230,68 @@ class UserRepositoryImpl {
           SetOptions(merge: true));
 
       await batch.commit();
+
+      // 位置情報を取得して交換記録を保存
+      await _saveExchangeWithLocation(
+        senderUid: senderUid,
+        receiverUid: receiverUid,
+        senderUserId: senderUserId,
+        receiverUserId: receiverUserId,
+      );
+
       // Debug logging removed for production
     } on Exception {
       rethrow;
+    }
+  }
+
+  // 位置情報付きで交換記録を保存
+  Future<void> _saveExchangeWithLocation({
+    required String senderUid,
+    required String receiverUid,
+    required String senderUserId,
+    required String receiverUserId,
+  }) async {
+    try {
+      // 位置情報を取得
+      final position = await LocationService.getCurrentLocation();
+
+      // 相手の名前を取得
+      String peerName = '';
+      try {
+        final peerProfile = await _db
+            .collection('public_profiles')
+            .where('ownerUid', isEqualTo: senderUid)
+            .limit(1)
+            .get();
+        if (peerProfile.docs.isNotEmpty) {
+          peerName = peerProfile.docs.first.data()['name'] as String? ?? '';
+        }
+      } catch (e) {
+        // 名前の取得に失敗しても交換処理は続行
+      }
+
+      // 交換記録を作成
+      final exchangeData = {
+        'ownerUid': receiverUid, // 承認した人が所有者
+        'peerUid': senderUid,
+        'peerUserId': senderUserId,
+        'peerName': peerName,
+        'exchangedAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      // 位置情報が取得できた場合は追加
+      if (position != null) {
+        exchangeData['location'] =
+            GeoPoint(position.latitude, position.longitude);
+      }
+
+      // 交換記録を保存
+      await _db.collection('exchanges').add(exchangeData);
+    } catch (e) {
+      // 位置情報の取得に失敗しても交換処理は続行
+      // Debug logging removed for production
     }
   }
 
