@@ -15,7 +15,7 @@ class ExchangeMapBanner extends ConsumerStatefulWidget {
 }
 
 class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
-  bool _expanded = false;
+  bool _expanded = true; // 常に展開状態で表示
   GoogleMapController? _controller;
 
   @override
@@ -44,7 +44,7 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
                 ),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  height: _expanded ? 240 : 72,
+                  height: _expanded ? 300 : 72,
                   padding: const EdgeInsets.all(12),
                   child: _expanded
                       ? _buildMap(context, items)
