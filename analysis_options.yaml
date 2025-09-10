@@ -1,6 +1,6 @@
 ## 方針: 安全性と可読性を優先（命名/未使用/const 推奨、暗黙の型を避ける）。
 ## 自動生成物は除外し、アプリコードに集中して検査。
-include: package:pedantic_mono/analysis_options.yaml
+include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - '**/*.g.dart'       # 自動生成コード。手で直さないため解析対象外。
