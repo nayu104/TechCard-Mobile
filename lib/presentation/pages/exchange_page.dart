@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../widgets/exchange/exchange_form.dart';
-import '../widgets/exchange/nearby_placeholder_card.dart';
 import '../widgets/exchange/nfc_card.dart';
 import '../widgets/exchange/qr_scan_card.dart';
 
@@ -38,8 +37,6 @@ class _ExchangePageState extends ConsumerState<ExchangePage> {
           QrScanCard(),
           SizedBox(height: 12),
           NfcCard(),
-          SizedBox(height: 12),
-          NearbyPlaceholderCard(),
         ],
       ),
     );

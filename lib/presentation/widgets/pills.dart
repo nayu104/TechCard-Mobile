@@ -51,7 +51,7 @@ class SkillChip extends StatelessWidget {
       ),
       child: Text(label,
           style: TextStyle(
-              color: isDark ? Colors.white : Colors.black87, fontSize: 12)),
+              color: isDark ? Colors.black : Colors.black87, fontSize: 12)),
     );
   }
 }

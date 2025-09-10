@@ -106,8 +106,23 @@ class MyCardPage extends ConsumerWidget {
                         Positioned(
                           top: 8,
                           right: 8,
-                          child: IconButton(
-                            icon: const Icon(Icons.edit),
+                          child: TextButton.icon(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onSurface,
+                            ),
+                            icon: const Icon(Icons.edit, size: 18),
+                            label: Text(
+                              '編集',
+                              style: TextStyle(
+                                fontSize: responsiveFontSize(context, 12),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             onPressed: () {
                               ref.read(isEditingProvider.notifier).state = true;
                             },
