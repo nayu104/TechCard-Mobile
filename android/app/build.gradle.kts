@@ -27,8 +27,8 @@ android {
         applicationId = "com.example.techcard_mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        // Firebase Auth and other libraries require minSdk 23+
-        minSdk = maxOf(23, flutter.minSdkVersion)
+        // url_launcher_android などのプラグイン要件により minSdk 24 以上を要求
+        minSdk = maxOf(24, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

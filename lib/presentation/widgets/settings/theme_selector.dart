@@ -1,28 +1,22 @@
 import 'package:flutter/material.dart';
 
-/// テーマモードを選択するドロップダウン。
-/// valueに現在値、onChangedで反映先を受け取る。
+/// テーマモードをスイッチで切り替える（ライト/ダークのみ）。
 class ThemeSelector extends StatelessWidget {
-  const ThemeSelector(
-      {super.key, required this.value, required this.onChanged});
+  const ThemeSelector({super.key, required this.value, required this.onChanged});
 
   final ThemeMode value;
   final ValueChanged<ThemeMode?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      const Text('ダークモード'),
-      const Spacer(),
-      DropdownButton<ThemeMode>(
-        value: value,
-        items: const [
-          DropdownMenuItem(value: ThemeMode.system, child: Text('端末設定')),
-          DropdownMenuItem(value: ThemeMode.light, child: Text('ライト')),
-          DropdownMenuItem(value: ThemeMode.dark, child: Text('ダーク')),
-        ],
-        onChanged: onChanged,
-      ),
-    ]);
+    final isDark = value == ThemeMode.dark;
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.nights_stay_outlined),
+      title: const Text('ダークモード'),
+      subtitle: Text(isDark ? 'ダークテーマを使用中' : 'ライトテーマを使用中'),
+      value: isDark,
+      onChanged: (on) => onChanged(on ? ThemeMode.dark : ThemeMode.light),
+    );
   }
 }

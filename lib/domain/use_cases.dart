@@ -46,19 +46,26 @@ class GetContactsUseCase {
 }
 
 class AddContactUseCase {
-  AddContactUseCase(this.repo, this.activityRepository);
+  AddContactUseCase(this.repo, this.activityRepository, this.profileRepository);
   final ContactsRepository repo;
   final ActivityRepository activityRepository;
+  final ProfileRepository profileRepository;
 
   /// 連絡先を追加。重複時はfalse。成功時のみ活動ログを追記。
   Future<bool> call(Contact contact) async {
     // 入力検証: userId形式。
+    // Debug logging removed for production
     if (!isValidUserId(contact.userId)) {
-      throw ArgumentError('invalid');
+      // Debug logging removed for production
+      throw ArgumentError('invalid_user_id');
     }
     final ok = await repo.addContact(contact);
+    // Debug logging removed for production
     // 成功時のみ活動ログを記録。重複時(false)は副作用無し。
     if (ok) {
+      // MyProfileのfriendIdsに追加
+      await _addToFriendIds(contact.userId);
+
       await activityRepository.addActivity(ActivityItem(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         title: '名刺を追加: @${contact.userId}',
@@ -67,6 +74,23 @@ class AddContactUseCase {
       ));
     }
     return ok;
+  }
+
+  /// MyProfileのfriendIdsにユーザーIDを追加
+  Future<void> _addToFriendIds(String userId) async {
+    final currentProfile = await profileRepository.getProfile();
+    // Debug logging removed for production
+    if (currentProfile != null && !currentProfile.friendIds.contains(userId)) {
+      final updatedProfile = currentProfile.copyWith(
+        friendIds: [...currentProfile.friendIds, userId],
+        updatedAt: DateTime.now(),
+      );
+      // Debug logging removed for production
+      await profileRepository.saveProfile(updatedProfile);
+      // Debug logging removed for production
+    } else {
+      // Debug logging removed for production
+    }
   }
 }
 

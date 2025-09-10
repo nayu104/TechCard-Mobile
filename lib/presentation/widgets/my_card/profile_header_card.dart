@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/github_user_provider.dart';
 
 /// プロフィールのヘッダー（アバター、名前、ID、役職）表示カードの中身。
@@ -48,38 +49,72 @@ class ProfileHeaderContent extends ConsumerWidget {
               ? TextField(
                   controller: controllerId,
                   decoration: const InputDecoration(labelText: 'GitHubのユーザー名'))
-              : Row(children: [
-                  const Icon(Icons.code, size: 16),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: githubNameAsync.when(
-                      loading: () => Text('GitHub: @$displayGithub',
-                          style: TextStyle(color: Theme.of(context).hintColor)),
-                      error: (_, __) => Text(
-                          displayGithub.isNotEmpty
-                              ? 'GitHub: @$displayGithub'
-                              : 'GitHub未設定',
-                          style: TextStyle(color: Theme.of(context).hintColor)),
-                      data: (name) {
-                        if (displayGithub.isEmpty) {
-                          //displayGithubの中身が空かどうかを確認
-                          return Text('GitHub未設定',
-                              style: TextStyle(
-                                  color: Theme.of(context).hintColor));
-                        }
-                        final show = (name == null || name.isEmpty)
-                            ? '@$displayGithub'
-                            : name;
-                        return Text('GitHub: $show',
-                            overflow: TextOverflow.ellipsis,
-                            style:
-                                TextStyle(color: Theme.of(context).hintColor));
-                      },
-                    ),
-                  ),
-                ]),
+              : _GithubRow(
+                  displayGithub: displayGithub,
+                  githubNameAsync: githubNameAsync,
+                ),
         ]),
       ),
     ]);
+  }
+}
+
+class _GithubRow extends StatelessWidget {
+  const _GithubRow({
+    required this.displayGithub,
+    required this.githubNameAsync,
+  });
+  final String displayGithub;
+  final AsyncValue<String?> githubNameAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    final githubIcon = Image.asset(
+      'assets/ui_image/github-mark-white.png',
+      width: 16,
+      height: 16,
+      color: Theme.of(context).hintColor, // テーマに馴染む色へ
+      colorBlendMode: BlendMode.srcIn,
+    );
+
+    final row = Row(children: [
+      githubIcon,
+      const SizedBox(width: 6),
+      Expanded(
+        child: githubNameAsync.when(
+          loading: () => Text('GitHub: @${displayGithub.isNotEmpty ? displayGithub : ''}',
+              style: TextStyle(color: Theme.of(context).hintColor)),
+          error: (_, __) => Text(
+              displayGithub.isNotEmpty
+                  ? 'GitHub: @$displayGithub'
+                  : 'GitHub未設定',
+              style: TextStyle(color: Theme.of(context).hintColor)),
+          data: (name) {
+            if (displayGithub.isEmpty) {
+              return Text('GitHub未設定',
+                  style: TextStyle(color: Theme.of(context).hintColor));
+            }
+            final show = (name == null || name.isEmpty)
+                ? '@$displayGithub'
+                : name;
+            return Text('GitHub: $show',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: Theme.of(context).hintColor));
+          },
+        ),
+      ),
+    ]);
+
+    if (displayGithub.isEmpty) {
+      return row; // 未設定時はリンクなし
+    }
+    return InkWell(
+      onTap: () async {
+        final url = Uri.parse('https://github.com/$displayGithub');
+        // ignore: deprecated_member_use
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      },
+      child: row,
+    );
   }
 }
