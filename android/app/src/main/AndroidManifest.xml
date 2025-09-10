@@ -34,6 +34,11 @@
     </application>
     <!-- カメラ権限: QRコードスキャンのために使用（mobile_scanner）。 -->
     <!-- <uses-permission android:name="android.permission.CAMERA" /> -->
+    <!-- NFC権限: NFC機能を使用するために必要。 -->
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature
+        android:name="android.hardware.nfc"
+        android:required="true" />
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

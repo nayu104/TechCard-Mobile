@@ -1,6 +1,5 @@
 // 方針: I/Oの契約と失敗ケースを明確化。UI層に例外が漏れない設計を目指す。
 // Failure型は簡略化のため未導入（将来Result/Failure導入可）。
-// ignore_for_file: one_member_abstracts
 import 'models.dart';
 
 abstract class ProfileRepository {
@@ -21,4 +20,6 @@ abstract class ActivityRepository {
 // Remote directory (Firebase) used for looking up contacts by userId
 abstract class RemoteDirectoryRepository {
   Future<Contact?> fetchByUserId(String userId); // I/O: ネットワーク。未存在はnull。
+  Future<Contact?> fetchByGithubUsername(
+      String githubUsername); // I/O: ネットワーク。GitHub名で検索。未存在はnull。
 }

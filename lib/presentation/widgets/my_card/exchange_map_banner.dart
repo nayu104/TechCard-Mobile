@@ -1,0 +1,196 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../providers/usecase_providers.dart';
+
+class ExchangeMapBanner extends ConsumerStatefulWidget {
+  const ExchangeMapBanner({super.key});
+
+  @override
+  ConsumerState<ExchangeMapBanner> createState() => _ExchangeMapBannerState();
+}
+
+class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
+  bool _expanded = false;
+  GoogleMapController? _controller;
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(mapExchangesProvider);
+
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          children: [
+            GestureDetector(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  height: _expanded ? 240 : 72,
+                  padding: const EdgeInsets.all(12),
+                  child: _expanded
+                      ? _buildMap(context, items)
+                      : _CollapsedBanner(count: items.length),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMap(BuildContext context, List<Map<String, dynamic>> items) {
+    final markers = <Marker>{};
+    LatLngBounds? bounds;
+
+    for (final m in items) {
+      final loc = m['location'];
+      if (loc is GeoPoint) {
+        final latLng = LatLng(loc.latitude, loc.longitude);
+        markers.add(
+          Marker(
+            markerId: MarkerId(m['id'] as String),
+            position: latLng,
+            infoWindow: InfoWindow(
+              title: (m['peerName'] as String?)?.isNotEmpty == true
+                  ? m['peerName'] as String
+                  : (m['peerUserId'] as String? ?? ''),
+              snippet: _formatTimestamp(m['exchangedAt']),
+            ),
+          ),
+        );
+        bounds = _extend(bounds, latLng);
+      }
+    }
+
+    final initial = markers.isNotEmpty
+        ? markers.first.position
+        : const LatLng(35.681236, 139.767125); // 東京駅
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: GoogleMap(
+        initialCameraPosition:
+            CameraPosition(target: initial, zoom: markers.length > 1 ? 8 : 12),
+        onMapCreated: (c) async {
+          _controller = c;
+          // 全ピンが収まるように調整
+          if (bounds != null) {
+            await Future.delayed(const Duration(milliseconds: 100));
+            await _controller?.animateCamera(
+              CameraUpdate.newLatLngBounds(bounds!, 48),
+            );
+          }
+        },
+        markers: markers,
+        myLocationButtonEnabled: false,
+        myLocationEnabled: false,
+        zoomControlsEnabled: false,
+        compassEnabled: false,
+      ),
+    );
+  }
+
+  String _formatTimestamp(dynamic ts) {
+    try {
+      if (ts is Timestamp) {
+        final dt = ts.toDate();
+        return '${dt.year}/${dt.month.toString().padLeft(2, '0')}/${dt.day.toString().padLeft(2, '0')}';
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  LatLngBounds _extend(LatLngBounds? current, LatLng p) {
+    if (current == null) {
+      return LatLngBounds(southwest: p, northeast: p);
+    }
+    final sw = LatLng(
+      p.latitude < current.southwest.latitude
+          ? p.latitude
+          : current.southwest.latitude,
+      p.longitude < current.southwest.longitude
+          ? p.longitude
+          : current.southwest.longitude,
+    );
+    final ne = LatLng(
+      p.latitude > current.northeast.latitude
+          ? p.latitude
+          : current.northeast.latitude,
+      p.longitude > current.northeast.longitude
+          ? p.longitude
+          : current.northeast.longitude,
+    );
+    return LatLngBounds(southwest: sw, northeast: ne);
+  }
+}
+
+class _CollapsedBanner extends StatelessWidget {
+  const _CollapsedBanner({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black87;
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFCC80), Color(0xFFFF8F00), Color(0xFFF4511E)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              )
+            ],
+          ),
+          child: const Icon(Icons.map, color: Colors.white),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('交換マップ',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 2),
+              Text(
+                count > 0 ? '過去の交換地点を地図で確認できます' : '交換履歴がまだありません',
+                style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 12),
+              )
+            ],
+          ),
+        ),
+        const Icon(Icons.keyboard_arrow_down),
+      ],
+    );
+  }
+}

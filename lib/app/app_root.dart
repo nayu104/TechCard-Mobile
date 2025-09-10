@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../presentation/app_shell.dart';
 import '../presentation/pages/sign_in.dart';
-import '../presentation/providers/auth_providers.dart';
 import '../presentation/providers/providers.dart';
 
 class AppRoot extends ConsumerStatefulWidget {
@@ -14,6 +14,27 @@ class AppRoot extends ConsumerStatefulWidget {
 }
 
 class _AppRootState extends ConsumerState<AppRoot> {
+  @override
+  void initState() {
+    super.initState();
+    _ensureLocationPermission();
+  }
+
+  Future<void> _ensureLocationPermission() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // ユーザーにサービス有効化を促すだけ（ブロックしない）
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      // deniedForever の場合はアプリ内で必要時に設定画面誘導
+    } catch (_) {
+      // 失敗しても起動は継続
+    }
+  }
   @override
   Widget build(BuildContext context) {
     // ✅ 元のテーマProvider使用を復活

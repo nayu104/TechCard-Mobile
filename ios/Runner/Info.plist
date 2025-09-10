@@ -48,5 +48,13 @@
 	<!-- カメラ使用目的: QRコードの読み取り（mobile_scanner）に限定。 -->
 	<!-- <key>NSCameraUsageDescription</key>
 	<string>QRコードを読み取るためにカメラを使用します。</string> -->
+	<!-- NFC使用目的: 名刺データの送受信 -->
+	<key>NFCReaderUsageDescription</key>
+	<string>名刺データを送受信するためにNFCを使用します。</string>
+	<key>com.apple.developer.nfc.readersession.formats</key>
+	<array>
+		<string>TAG</string>
+		<string>NDEF</string>
+	</array>
 </dict>
 </plist>

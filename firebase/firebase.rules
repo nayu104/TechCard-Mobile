@@ -24,9 +24,31 @@ service cloud.firestore {
       // 新規作成は未存在時のみ（重複防止）
       allow create: if request.auth != null
         && request.resource.data.ownerUid == request.auth.uid
-        && !exists(/databases/$(database)/documents/user_ids/$(userId));
+        && !exists(/databases/$(database)/documents/user_ids/$(userId))
+        // handleの形式: 英数/アンダースコア/ハイフン、6文字以上30文字以下
+        && request.resource.id.matches('^[A-Za-z0-9_-]{6,30}$');
       allow update, delete: if request.auth != null
-        && resource.data.ownerUid == request.auth.uid;
+        && resource.data.ownerUid == request.auth.uid
+        // 更新時もIDポリシーを一応確認（updateは通常ownerUid以外変わらない想定）
+        && request.resource.id.matches('^[A-Za-z0-9_-]{6,30}$');
+    }
+
+    // 交換申請（フレンドリクエスト）
+    // スキーマ想定: { senderUid, senderUserId, receiverUid, receiverUserId, status, createdAt, updatedAt }
+    // 権限:
+    // - create: 認証済みユーザーが senderUid として自分の申請を作成できる
+    // - read: sender または receiver のみ閲覧可
+    // - update: sender/receiver のどちらかが status を更新可（キャンセル/承認/却下など）
+    // - delete: どちらかが削除可（任意）
+    match /friend_requests/{requestId} {
+      allow create: if request.auth != null
+        && request.resource.data.senderUid == request.auth.uid;
+      allow read: if request.auth != null
+        && (resource.data.senderUid == request.auth.uid
+            || resource.data.receiverUid == request.auth.uid);
+      allow update, delete: if request.auth != null
+        && (resource.data.senderUid == request.auth.uid
+            || resource.data.receiverUid == request.auth.uid);
     }
   }
 }
