@@ -43,12 +43,12 @@ class QrScanCard extends ConsumerWidget {
                         onDetect: (barcodes) async {
                           for (final bc in barcodes.barcodes) {
                             final raw = bc.rawValue;
-                            print('QRスキャン: 生データ=$raw');
-                            print('QRスキャン: データ型=${raw.runtimeType}');
-                            print('QRスキャン: データ長=${raw?.length ?? 0}');
+                            // Debug logging removed for production
+                            // Debug logging removed for production
+                            // Debug logging removed for production
 
                             if (raw == null || raw.trim().isEmpty) {
-                              print('QRスキャン: 空のデータ');
+                              // Debug logging removed for production
                               continue;
                             }
 
@@ -56,12 +56,12 @@ class QrScanCard extends ConsumerWidget {
                             final cleanData =
                                 raw.startsWith('@') ? raw.substring(1) : raw;
                             final normalized = normalizeUserId(cleanData);
-                            print('QRスキャン: 処理後データ(clean)=$cleanData');
-                            print('QRスキャン: 正規化データ(normalized)=$normalized');
-                            print('QRスキャン: 正規化データ長=${normalized.length}');
+                            // Debug logging removed for production
+                            // Debug logging removed for production
+                            // Debug logging removed for production
 
                             if (normalized.trim().isEmpty) {
-                              print('QRスキャン: 無効なデータ');
+                              // Debug logging removed for production
                               await Fluttertoast.showToast(msg: '無効なQRコードです');
                               continue;
                             }
@@ -95,15 +95,15 @@ class QrScanCard extends ConsumerWidget {
   Future<void> _handleQrData(
       BuildContext context, WidgetRef ref, String data) async {
     try {
-      print('QRスキャン: データ処理開始: $data');
-      print('QRスキャン: データ長: ${data.length}');
+      // Debug logging removed for production
+      // Debug logging removed for production
 
       // 1. ユーザーIDとして検索を試行
       final isValidId = isValidUserId(data);
-      print('QRスキャン: isValidUserId($data) = $isValidId');
+      // Debug logging removed for production
 
       if (isValidId) {
-        print('QRスキャン: ユーザーIDとして検索: $data');
+        // Debug logging removed for production
         showDialog<void>(
           context: context,
           builder: (context) => UserSearchResultDialog(userId: data),
@@ -113,24 +113,24 @@ class QrScanCard extends ConsumerWidget {
 
       // 2. GitHub URLかどうかを判定
       final hasGithubUrl = data.contains('github.com/');
-      print('QRスキャン: GitHub URL含む: $hasGithubUrl');
+      // Debug logging removed for production
 
       if (hasGithubUrl) {
         final githubUsername = _extractGithubUsername(data);
-        print('QRスキャン: 抽出されたGitHub名: $githubUsername');
+        // Debug logging removed for production
 
         if (githubUsername.isNotEmpty) {
-          print('QRスキャン: GitHub名として検索: $githubUsername');
+          // Debug logging removed for production
           await _searchByGithub(context, ref, githubUsername);
           return;
         }
       }
 
       // 3. 直接GitHub名として検索を試行
-      print('QRスキャン: 直接GitHub名として検索: $data');
+      // Debug logging removed for production
       await _searchByGithub(context, ref, data);
     } catch (e) {
-      print('QRスキャン: エラー: $e');
+      // Debug logging removed for production
       await Fluttertoast.showToast(msg: 'QRコードの処理に失敗しました: $e');
     }
   }
@@ -159,17 +159,18 @@ class QrScanCard extends ConsumerWidget {
       final contact = await remote.fetchByGithubUsername(githubUsername);
 
       if (contact != null) {
-        print('QRスキャン: GitHub名でユーザーが見つかりました: $githubUsername');
+        // Debug logging removed for production
         showDialog<void>(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (context) => UserSearchResultDialog(userId: contact.userId),
         );
       } else {
-        print('QRスキャン: GitHub名でユーザーが見つかりませんでした: $githubUsername');
+        // Debug logging removed for production
         await Fluttertoast.showToast(msg: 'ユーザーが見つかりませんでした');
       }
     } catch (e) {
-      print('QRスキャン: GitHub名検索エラー: $e');
+      // Debug logging removed for production
       await Fluttertoast.showToast(msg: '検索に失敗しました: $e');
     }
   }

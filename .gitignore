@@ -45,3 +45,8 @@ app.*.map.json
 /android/app/release
 TechCard-Mobile/
 .fvm/
+
+# Local configuration files with sensitive data
+android/local.properties
+.env
+web/env.js

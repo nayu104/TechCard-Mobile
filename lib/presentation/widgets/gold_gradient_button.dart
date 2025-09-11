@@ -22,21 +22,21 @@ class GoldGradientButton extends StatelessWidget {
 
   /// ゴールドグラデの主要ボタンを構築。enabled=false時は非活性表示。
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final child = Container(
       height: 48,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        gradient: gradient ?? const LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: <Color>[
-            Color(0xFFFFCC80), // orange 200 (soft cream)
-            Color(0xFFFF8F00), // amber 800 (rich orange)
-            Color(0xFFF4511E), // deep orange 400
-          ],
-          stops: <double>[0.0, 0.6, 1.0],
-        ),
+        gradient: gradient ??
+            const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: <Color>[
+                Color(0xFFFFCC80), // orange 200 (soft cream)
+                Color(0xFFFF8F00), // amber 800 (rich orange)
+                Color(0xFFF4511E), // deep orange 400
+              ],
+              stops: <double>[0.0, 0.6, 1.0],
+            ),
         color: enabled
             ? null
             : Theme.of(context).disabledColor.withValues(alpha: 0.2),

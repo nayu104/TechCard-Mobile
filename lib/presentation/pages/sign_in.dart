@@ -74,22 +74,27 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     width: double.infinity,
                     height: 48,
                     child: Builder(builder: (context) {
-                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      final isDark =
+                          Theme.of(context).brightness == Brightness.dark;
                       final fg = isDark ? Colors.white : Colors.black;
                       return ElevatedButton(
-                        onPressed: (_isLoading || !_canSubmit) ? null : _handleGuestLogin,
+                        onPressed: (_isLoading || !_canSubmit)
+                            ? null
+                            : _handleGuestLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).cardColor,
                           foregroundColor: fg,
                           shape: const StadiumBorder(),
                           elevation: 0,
-                          side: const BorderSide(color: Colors.black, width: 1.2),
+                          side:
+                              const BorderSide(color: Colors.black, width: 1.2),
                         ),
                         child: _isLoading
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -130,11 +135,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                 final login = ref.read(githubLoginProvider);
                                 await login();
                                 if (!mounted) return;
+                                // ignore: use_build_context_synchronously
                                 Navigator.of(context).pop();
                               } catch (e) {
                                 if (!mounted) return;
+                                // ignore: use_build_context_synchronously
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('GitHubログインに失敗しました: $e')),
+                                  SnackBar(
+                                      content: Text('GitHubログインに失敗しました: $e')),
                                 );
                               } finally {
                                 if (mounted) setState(() => _isLoading = false);
@@ -149,7 +157,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Text(
                               'Githubでログイン',

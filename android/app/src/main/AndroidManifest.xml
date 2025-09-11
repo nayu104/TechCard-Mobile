@@ -31,6 +31,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${GOOGLE_MAPS_API_KEY}" />
     </application>
     <!-- カメラ権限: QRコードスキャンのために使用（mobile_scanner）。 -->
     <!-- <uses-permission android:name="android.permission.CAMERA" /> -->
@@ -39,6 +43,9 @@
     <uses-feature
         android:name="android.hardware.nfc"
         android:required="true" />
+    <!-- 位置情報権限: Google Mapsと位置情報取得のために必要 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

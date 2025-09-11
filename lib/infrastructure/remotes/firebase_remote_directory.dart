@@ -14,13 +14,14 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
   /// 優先順: user_ids(ハンドル) -> public_profiles(ドキュメントID一致)
   Future<Contact?> fetchByUserId(String input) async {
     final normalized = input.replaceFirst(RegExp(r'^@'), '');
-    print('ユーザーID検索開始: $normalized');
+    // Debug logging removed for production
 
     try {
       // 1) user_ids（ハンドル）で解決
-      final handleDoc = await firestore.collection('user_ids').doc(normalized).get();
+      final handleDoc =
+          await firestore.collection('user_ids').doc(normalized).get();
       if (handleDoc.exists && handleDoc.data() != null) {
-        final ownerUid = (handleDoc.data()! as Map<String, dynamic>)['ownerUid']?.toString();
+        final ownerUid = handleDoc.data()!['ownerUid']?.toString();
         if (ownerUid != null && ownerUid.isNotEmpty) {
           final q = await firestore
               .collection('public_profiles')
@@ -36,7 +37,9 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
               userId: data['userId'] as String? ?? d.id,
               bio: (data['message'] as String?) ?? '',
               githubUsername: _extractGithubUsername(data['github'] as String?),
-              skills: ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
+              skills: ((data['skills'] as List?) ?? [])
+                  .map((e) => e.toString())
+                  .toList(),
               avatarUrl: data['avatar'] as String?,
             );
           }
@@ -44,12 +47,13 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
       }
 
       // 2) フォールバック: public_profiles のdocId一致
-      final doc = await firestore.collection('public_profiles').doc(normalized).get();
+      final doc =
+          await firestore.collection('public_profiles').doc(normalized).get();
       if (!doc.exists || doc.data() == null) {
-        print('public_profilesでユーザーが見つかりませんでした: $normalized');
+        // Debug logging removed for production
         return null;
       }
-      print('public_profilesでユーザーが見つかりました: $normalized');
+      // Debug logging removed for production
       final data = doc.data() as Map<String, dynamic>;
       return Contact(
         id: data['userId'] as String? ?? normalized,
@@ -57,11 +61,12 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
         userId: (data['userId'] as String?) ?? normalized,
         bio: (data['message'] as String?) ?? '',
         githubUsername: _extractGithubUsername(data['github'] as String?),
-        skills: ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
+        skills:
+            ((data['skills'] as List?) ?? []).map((e) => e.toString()).toList(),
         avatarUrl: data['avatar'] as String?,
       );
     } catch (e) {
-      print('ユーザー検索エラー: $e');
+      // Debug logging removed for production
       return null;
     }
   }
@@ -86,7 +91,7 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
 
   /// GitHub名でFirestoreを検索し、対応するContactを返す。未存在時はnull。
   Future<Contact?> fetchByGithubUsername(String githubUsername) async {
-    print('GitHub名検索開始: $githubUsername');
+    // Debug logging removed for production
 
     try {
       // Firestoreの 'github' フィールドには多くの場合フルURLが格納されるため、
@@ -99,7 +104,7 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
         'http://www.github.com/$githubUsername',
       }.toList();
 
-      print('GitHub名検索: 試行候補=${candidates.join(', ')}');
+      // Debug logging removed for production
 
       // whereIn は最大 10 要素まで。今回の候補は5件なので安全。
       final query = firestore
@@ -110,12 +115,12 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
       final snap = await query.get();
 
       if (snap.docs.isEmpty) {
-        print('public_profilesでGitHub名が見つかりませんでした: $githubUsername');
+        // Debug logging removed for production
         return null;
       }
 
       final doc = snap.docs.first;
-      print('public_profilesでGitHub名が見つかりました: ${doc.id}');
+      // Debug logging removed for production
       final data = doc.data();
 
       return Contact(
@@ -129,7 +134,7 @@ class FirebaseRemoteDirectory implements RemoteDirectoryRepository {
         avatarUrl: data['avatar'] as String?,
       );
     } catch (e) {
-      print('GitHub名検索エラー: $e');
+      // Debug logging removed for production
       return null;
     }
   }

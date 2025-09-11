@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../infrastructure/services/location_service.dart';
 import '../widgets/exchange/exchange_form.dart';
 import '../widgets/exchange/nfc_card.dart';
 import '../widgets/exchange/qr_scan_card.dart';
@@ -17,8 +18,29 @@ class ExchangePage extends ConsumerStatefulWidget {
 
 class _ExchangePageState extends ConsumerState<ExchangePage> {
   @override
+  void initState() {
+    super.initState();
+    _checkLocationPermission();
+  }
+
+  /// 位置情報の権限を確認・リクエスト
+  Future<void> _checkLocationPermission() async {
+    final hasPermission = await LocationService.isLocationPermissionGranted();
+    if (!hasPermission && mounted) {
+      final granted = await LocationService.requestLocationPermission();
+      if (!granted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('位置情報の権限が必要です。設定から許可してください。'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 
   /// ユーザーID交換/QRスキャン交換のUIを構築し、交換処理を呼び出す。
+  @override
   Widget build(BuildContext context) {
     // Exchange form/scan widgets handle providers internally.
     return Scaffold(

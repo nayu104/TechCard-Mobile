@@ -31,6 +31,25 @@
 
   <title>techcard_mobile</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- 環境変数ファイル（ローカル開発用） -->
+  <script src="env.js"></script>
+  
+  <!-- Google Maps API -->
+  <script>
+    // 環境に応じてAPIキーを設定
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const googleMapsApiKey = isLocalhost 
+      ? (window.ENV?.GOOGLE_MAPS_API_KEY || 'LOCAL_DEV_API_KEY') // ローカル開発用
+      : 'AIzaSyBdv1JgkyZWjICtrSCGJpAT8LF5SN2R0TA'; // 本番用（テスト用）
+    
+    // Google Maps APIを動的に読み込み
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

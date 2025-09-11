@@ -9,7 +9,7 @@ bool isValidUserId(String value) {
   // 一部環境ではハイフンを含むIDを使う可能性があるため許容
   final reg = RegExp(r'^[A-Za-z0-9_-]+$');
   final isValid = normalized.isNotEmpty && reg.hasMatch(normalized);
-  print('isValidUserId: raw="$value" normalized="$normalized" -> $isValid');
+  // Debug logging removed for production
   return isValid;
 }
 

@@ -1,10 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+<<<<<<< HEAD
 import 'package:geolocator/geolocator.dart';
 import 'package:techcard_mobile/domain/models.dart';
+=======
+>>>>>>> c35dfc721b167608abb22759f0fa487f7b0eb87b
 
 import '../../domain/entities/contact.dart';
 import '../../domain/entities/public_profile.dart';
 import '../../domain/entities/user_profile.dart';
+import '../services/location_service.dart';
 
 // ユーザープロフィールのFirestore操作を担当
 // 役割: users_v01（プライベート）とpublic_profiles（公開）の連携管理
@@ -34,7 +38,7 @@ class UserRepositoryImpl {
     try {
       final doc = await _db.collection('public_profiles').doc(userId).get();
       if (!doc.exists || doc.data() == null) return null;
-      final data = doc.data()! as Map<String, dynamic>;
+      final data = doc.data()!;
       final h = data['handle'];
       return h is String && h.isNotEmpty ? h : null;
     } catch (_) {
@@ -46,7 +50,8 @@ class UserRepositoryImpl {
   String _generateNumericHandle() {
     final now = DateTime.now().microsecondsSinceEpoch.toString();
     // 乱数ソースとして時刻とランダム値を混ぜる
-    final seed = now + (DateTime.now().millisecondsSinceEpoch % 1000000).toString();
+    final seed =
+        now + (DateTime.now().millisecondsSinceEpoch % 1000000).toString();
     // 数字のみを抽出して長さを調整（6〜15桁）
     final digits = seed.replaceAll(RegExp(r'[^0-9]'), '');
     final len = 6 + (digits.hashCode.abs() % 10); // 6..15
@@ -61,12 +66,14 @@ class UserRepositoryImpl {
       if (!exists.exists) return candidate;
     }
     // 最後は Firestore の自動IDを数値化して返す
-    final auto = _db.collection('user_ids').doc().id.replaceAll(RegExp(r'[^0-9]'), '');
+    final auto =
+        _db.collection('user_ids').doc().id.replaceAll(RegExp(r'[^0-9]'), '');
     return (auto.length >= 6 ? auto.substring(0, 15) : auto.padRight(6, '0'));
   }
 
   // 初期ハンドルの割当（user_ids予約 + public_profiles.handle を設定）
-  Future<String> assignInitialHandle({required String uid, required String userId}) async {
+  Future<String> assignInitialHandle(
+      {required String uid, required String userId}) async {
     final handle = await _generateAvailableNumericHandle();
     await _db.runTransaction((txn) async {
       final handleRef = _db.collection('user_ids').doc(handle);
@@ -79,10 +86,13 @@ class UserRepositoryImpl {
         'createdAt': FieldValue.serverTimestamp(),
       });
       final pubRef = _db.collection('public_profiles').doc(userId);
-      txn.set(pubRef, {
-        'handle': handle,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      txn.set(
+          pubRef,
+          {
+            'handle': handle,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
     return handle;
   }
@@ -116,17 +126,21 @@ class UserRepositoryImpl {
       if (oldHandle != null && oldHandle.isNotEmpty) {
         final oldRef = _db.collection('user_ids').doc(oldHandle);
         final oldSnap = await txn.get(oldRef);
-        if (oldSnap.exists && (oldSnap.data() as Map<String, dynamic>)['ownerUid'] == uid) {
+        if (oldSnap.exists &&
+            (oldSnap.data() as Map<String, dynamic>)['ownerUid'] == uid) {
           txn.delete(oldRef);
         }
       }
 
       // public_profilesに反映
       final pubRef = _db.collection('public_profiles').doc(userId);
-      txn.set(pubRef, {
-        'handle': normalized,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      txn.set(
+          pubRef,
+          {
+            'handle': normalized,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -139,7 +153,7 @@ class UserRepositoryImpl {
   }) async {
     final now = DateTime.now();
     try {
-      print('友達申請送信: sender=$senderUid(@$senderUserId) -> receiver=$receiverUid(@$receiverUserId)');
+      // Debug logging removed for production
       await _db.collection('friend_requests').add({
         'senderUid': senderUid,
         'senderUserId': senderUserId,
@@ -149,8 +163,7 @@ class UserRepositoryImpl {
         'createdAt': now,
         'updatedAt': now,
       });
-    } on Exception catch (e) {
-      print('友達申請送信エラー: $e');
+    } on Exception {
       rethrow;
     }
   }
@@ -165,21 +178,20 @@ class UserRepositoryImpl {
           .orderBy('createdAt', descending: true)
           .get();
       return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
-    } on Exception catch (e) {
-      print('受信申請取得エラー: $e');
+    } on Exception {
       return [];
     }
   }
 
   // 申請の状態更新（cancel/decline/accept 等）
-  Future<void> updateFriendRequestStatus(String requestId, String status) async {
+  Future<void> updateFriendRequestStatus(
+      String requestId, String status) async {
     try {
       await _db.collection('friend_requests').doc(requestId).update({
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-    } on Exception catch (e) {
-      print('申請更新エラー: $e');
+    } on Exception {
       rethrow;
     }
   }
@@ -207,20 +219,84 @@ class UserRepositoryImpl {
       // 双方向にfriend_ids追加
       final senderRef = _db.collection('users_v01').doc(senderUid);
       final receiverRef = _db.collection('users_v01').doc(receiverUid);
-      batch.set(senderRef, {
-        'friend_ids': FieldValue.arrayUnion([receiverUserId]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      batch.set(receiverRef, {
-        'friend_ids': FieldValue.arrayUnion([senderUserId]),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      batch.set(
+          senderRef,
+          {
+            'friend_ids': FieldValue.arrayUnion([receiverUserId]),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+      batch.set(
+          receiverRef,
+          {
+            'friend_ids': FieldValue.arrayUnion([senderUserId]),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
 
       await batch.commit();
-      print('申請承認完了: $requestId');
-    } on Exception catch (e) {
-      print('申請承認エラー: $e');
+
+      // 位置情報を取得して交換記録を保存
+      await _saveExchangeWithLocation(
+        senderUid: senderUid,
+        receiverUid: receiverUid,
+        senderUserId: senderUserId,
+        receiverUserId: receiverUserId,
+      );
+
+      // Debug logging removed for production
+    } on Exception {
       rethrow;
+    }
+  }
+
+  // 位置情報付きで交換記録を保存
+  Future<void> _saveExchangeWithLocation({
+    required String senderUid,
+    required String receiverUid,
+    required String senderUserId,
+    required String receiverUserId,
+  }) async {
+    try {
+      // 位置情報を取得
+      final position = await LocationService.getCurrentLocation();
+
+      // 相手の名前を取得
+      String peerName = '';
+      try {
+        final peerProfile = await _db
+            .collection('public_profiles')
+            .where('ownerUid', isEqualTo: senderUid)
+            .limit(1)
+            .get();
+        if (peerProfile.docs.isNotEmpty) {
+          peerName = peerProfile.docs.first.data()['name'] as String? ?? '';
+        }
+      } catch (e) {
+        // 名前の取得に失敗しても交換処理は続行
+      }
+
+      // 交換記録を作成
+      final exchangeData = {
+        'ownerUid': receiverUid, // 承認した人が所有者
+        'peerUid': senderUid,
+        'peerUserId': senderUserId,
+        'peerName': peerName,
+        'exchangedAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      // 位置情報が取得できた場合は追加
+      if (position != null) {
+        exchangeData['location'] =
+            GeoPoint(position.latitude, position.longitude);
+      }
+
+      // 交換記録を保存
+      await _db.collection('exchanges').add(exchangeData);
+    } catch (e) {
+      // 位置情報の取得に失敗しても交換処理は続行
+      // Debug logging removed for production
     }
   }
 
@@ -228,7 +304,7 @@ class UserRepositoryImpl {
   // arrayUnionで重複なく安全に追加する
   Future<void> addFriend(String uid, String friendUserId) async {
     try {
-      print('フレンド追加開始: uid=$uid, friendUserId=$friendUserId');
+      // Debug logging removed for production
       final docRef = _db.collection('users_v01').doc(uid);
       try {
         // 既存ドキュメント想定の通常パス
@@ -243,9 +319,8 @@ class UserRepositoryImpl {
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
-      print('フレンド追加完了');
-    } on Exception catch (e) {
-      print('フレンド追加エラー: $e');
+      // Debug logging removed for production
+    } on Exception {
       rethrow;
     }
   }
@@ -253,21 +328,21 @@ class UserRepositoryImpl {
   // プライベートプロフィール保存
   // 処理: users_v01への保存 + public_profilesへの同期
   Future<void> saveUserProfile(String uid, MyProfile profile) async {
-    print('プロフィール保存開始: UID=$uid, userId=${profile.userId}');
+    // Debug logging removed for production
     final batch = _db.batch();
 
     try {
       // 1. プライベートデータを保存（users_v01/{uid}）
       final userDoc = _db.collection('users_v01').doc(uid);
       batch.set(userDoc, profile.toJson());
-      print('users_v01に保存予定: ${profile.toJson()}');
+      // Debug logging removed for production
 
       // 2. 公開データを同期（public_profiles/{userId}）他人の名刺として参照される
       //    - MyProfile → PublicProfile変換でプライベート情報を除外
       final publicProfile = _createPublicProfile(profile, uid);
       final publicDoc = _db.collection('public_profiles').doc(profile.userId);
       batch.set(publicDoc, publicProfile.toJson());
-      print('public_profilesに保存予定: ${publicProfile.toJson()}');
+      // Debug logging removed for production
 
       // 3. userId予約テーブル更新（user_ids/{userId}）
       final userIdDoc = _db.collection('user_ids').doc(profile.userId);
@@ -275,13 +350,12 @@ class UserRepositoryImpl {
         'ownerUid': uid,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      print('user_idsに保存予定: ownerUid=$uid');
+      // Debug logging removed for production
 
       // 4. 一括実行（全て成功 or 全て失敗）
       await batch.commit();
-      print('プロフィール保存完了');
-    } on Exception catch (e) {
-      print('プロフィール保存エラー: $e');
+      // Debug logging removed for production
+    } on Exception {
       // ユーザープロフィール保存エラー
       rethrow;
     }

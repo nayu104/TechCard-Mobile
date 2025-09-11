@@ -56,5 +56,10 @@
 		<string>TAG</string>
 		<string>NDEF</string>
 	</array>
+	<!-- 位置情報使用目的: 名刺交換地点の記録 -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>名刺交換地点を記録するために位置情報を使用します。</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>名刺交換地点を記録するために位置情報を使用します。</string>
 </dict>
 </plist>

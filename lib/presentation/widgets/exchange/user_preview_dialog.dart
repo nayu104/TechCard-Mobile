@@ -260,14 +260,13 @@ class UserSearchResultDialog extends ConsumerWidget {
     try {
       // 入力を正規化（@や不可視文字の除去など）
       final normalizedUserId = normalizeUserId(userId);
-      print('UserSearchResultDialog: Searching for userId (normalized): $normalizedUserId (raw: $userId)');
+      // Debug logging removed for production
       final remote = ref.read(remoteDirectoryRepositoryProvider);
       final result = await remote.fetchByUserId(normalizedUserId);
-      print(
-          'UserSearchResultDialog: Search result: ${result != null ? "Found" : "Not found"}');
+      // Debug logging removed for production
       return result;
     } catch (e) {
-      print('UserSearchResultDialog: Search error: $e');
+      // Debug logging removed for production
       throw Exception('ユーザー検索に失敗しました: $e');
     }
   }
@@ -309,7 +308,7 @@ class UserSearchResultDialog extends ConsumerWidget {
 
       await Fluttertoast.showToast(msg: '交換申請を送信しました');
     } catch (e) {
-      print('UserPreviewDialog: 交換申請送信エラー: $e');
+      // Debug logging removed for production
       await Fluttertoast.showToast(msg: '申請の送信に失敗しました');
     }
   }

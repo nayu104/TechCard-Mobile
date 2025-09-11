@@ -54,13 +54,13 @@ class AddContactUseCase {
   /// 連絡先を追加。重複時はfalse。成功時のみ活動ログを追記。
   Future<bool> call(Contact contact) async {
     // 入力検証: userId形式。
-    print('AddContactUseCase: try add contact @${contact.userId}');
+    // Debug logging removed for production
     if (!isValidUserId(contact.userId)) {
-      print('AddContactUseCase: invalid userId ${contact.userId}');
+      // Debug logging removed for production
       throw ArgumentError('invalid_user_id');
     }
     final ok = await repo.addContact(contact);
-    print('AddContactUseCase: local repo.addContact -> $ok');
+    // Debug logging removed for production
     // 成功時のみ活動ログを記録。重複時(false)は副作用無し。
     if (ok) {
       // MyProfileのfriendIdsに追加
@@ -79,17 +79,17 @@ class AddContactUseCase {
   /// MyProfileのfriendIdsにユーザーIDを追加
   Future<void> _addToFriendIds(String userId) async {
     final currentProfile = await profileRepository.getProfile();
-    print('AddContactUseCase: local profile loaded -> ${currentProfile != null}');
+    // Debug logging removed for production
     if (currentProfile != null && !currentProfile.friendIds.contains(userId)) {
       final updatedProfile = currentProfile.copyWith(
         friendIds: [...currentProfile.friendIds, userId],
         updatedAt: DateTime.now(),
       );
-      print('AddContactUseCase: updating local friendIds -> ${updatedProfile.friendIds}');
+      // Debug logging removed for production
       await profileRepository.saveProfile(updatedProfile);
-      print('AddContactUseCase: local friendIds updated');
+      // Debug logging removed for production
     } else {
-      print('AddContactUseCase: skip local friendIds update (null or already contains)');
+      // Debug logging removed for production
     }
   }
 }

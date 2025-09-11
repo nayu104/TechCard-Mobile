@@ -40,7 +40,7 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
+  static const FirebaseOptions web = const FirebaseOptions(
     apiKey: 'AIzaSyBYql0Vh1uFGUKfViIqnzmJp5nphrPQKGQ',
     appId: '1:746502358122:web:3a282ad08445165cd2f613',
     messagingSenderId: '746502358122',
@@ -50,7 +50,7 @@ class DefaultFirebaseOptions {
     measurementId: 'G-KE9D803T4S',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
+  static const FirebaseOptions android = const FirebaseOptions(
     apiKey: 'AIzaSyCeJLheB8Z2gjs-6CCSSc3FqLNghBGzqNY',
     appId: '1:746502358122:android:7a669b1e61505255d2f613',
     messagingSenderId: '746502358122',
@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'electronicbusinesscard-f3372.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
+  static const FirebaseOptions ios = const FirebaseOptions(
     apiKey: 'AIzaSyBTxyaDrAKgqzyVw4Jkbc6y0qZbBi84808',
     appId: '1:746502358122:ios:ced50d608921d9e9d2f613',
     messagingSenderId: '746502358122',
@@ -67,7 +67,8 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.techcardMobile',
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
+  static const FirebaseOptions macos = const FirebaseOptions(
+    
     apiKey: 'AIzaSyBTxyaDrAKgqzyVw4Jkbc6y0qZbBi84808',
     appId: '1:746502358122:ios:ced50d608921d9e9d2f613',
     messagingSenderId: '746502358122',
@@ -76,7 +77,7 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.techcardMobile',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
+  static const FirebaseOptions windows = const FirebaseOptions(
     apiKey: 'AIzaSyBYql0Vh1uFGUKfViIqnzmJp5nphrPQKGQ',
     appId: '1:746502358122:web:5b15bd6e8d8d19d6d2f613',
     messagingSenderId: '746502358122',

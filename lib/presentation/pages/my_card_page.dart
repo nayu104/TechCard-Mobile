@@ -157,8 +157,10 @@ class MyCardPage extends ConsumerWidget {
                             final now = DateTime.now();
                             final count = list.where((a) {
                               final dt = a.occurredAt;
-                              final sameMonth = dt.year == now.year && dt.month == now.month;
-                              return sameMonth && a.kind == ActivityKind.exchange;
+                              final sameMonth =
+                                  dt.year == now.year && dt.month == now.month;
+                              return sameMonth &&
+                                  a.kind == ActivityKind.exchange;
                             }).length;
                             return count.toString();
                           },
@@ -241,6 +243,7 @@ class MyCardPage extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
+                  // 活動ログ一覧
                   const ActivitiesList(),
                 ],
               ),

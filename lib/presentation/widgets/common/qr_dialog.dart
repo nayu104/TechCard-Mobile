@@ -10,7 +10,7 @@ class QrDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     // データが空の場合はエラー表示
     if (data.trim().isEmpty) {
-      print('QRコード生成エラー: データが空です');
+      // Debug logging removed for production
       return AlertDialog(
         title: const Text('QRコード'),
         content: const Column(
@@ -37,7 +37,7 @@ class QrDialog extends StatelessWidget {
     // @マークを付けてユーザーID形式にする
     final qrData = data.startsWith('@') ? data : '@$data';
 
-    print('QRコード生成: $qrData');
+    // Debug logging removed for production
 
     return AlertDialog(
       title: const Text('QRコード'),
@@ -55,9 +55,9 @@ class QrDialog extends StatelessWidget {
               data: qrData,
               size: 220,
               backgroundColor: Colors.white,
-              foregroundColor: Colors.black,
+              // foregroundColor is deprecated, using default colors
               errorStateBuilder: (context, error) {
-                print('QRコード生成エラー: $error');
+                // Debug logging removed for production
                 return Container(
                   width: 220,
                   height: 220,
