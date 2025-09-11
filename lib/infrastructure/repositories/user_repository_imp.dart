@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:techcard_mobile/domain/models.dart';
 
 import '../../domain/entities/contact.dart';
 import '../../domain/entities/public_profile.dart';
@@ -306,6 +307,8 @@ class UserRepositoryImpl {
   // 対象: public_profiles - 友達の公開プロフィールを取得
   // 背景: プルトゥリフレッシュ時に全データを再取得する必要がある
   // 意図: 効率的な一括取得でパフォーマンスを向上させる
+
+  /*
   Future<List<Contact>> getContacts(String uid) async {
     try {
       // 1. users_v01/{uid} から friend_ids を直接取得（スキーマに依存しない）
@@ -360,6 +363,38 @@ class UserRepositoryImpl {
       return [];
     }
   }
+  */
+  // 名刺一覧取得（users/{uid}/contacts から直接読む版）
+Future<List<Contact>> getContacts(String uid) async {
+  try {
+    final col = _db.collection('users').doc(uid).collection('contacts');
+    // createdAt が無ければ orderBy を外してください
+    final snap = await col.orderBy('createdAt', descending: true).get();
+
+    return snap.docs.map((d) {
+      final data = d.data();
+      return Contact.fromJson({
+        'id': d.id,
+        'name': data['name'] ?? '',
+        'userId': data['userId'] ?? '',
+        'bio': data['bio'] ?? '',
+        'githubUsername': data['githubUsername'],
+        'skills': (data['skills'] as List?)?.cast<String>() ?? const [],
+        'company': data['company'],
+        'role': data['role'],
+        'avatarUrl': data['avatarUrl'],
+      });
+    }).toList();
+  } on Exception {
+    return [];
+  }
+}
+
+
+
+
+
+
 
   // 特定ユーザーのプロフィール差分更新
   // 背景: ユーザーがメッセージを更新した際、そのユーザーのみを更新したい

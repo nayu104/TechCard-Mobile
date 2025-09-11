@@ -1,6 +1,8 @@
+// lib/infrastructure/demo_seeder.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// デモ名刺投入ユースケース
 final demoSeederProvider = Provider<DemoSeeder>((ref) {
   return DemoSeeder(FirebaseFirestore.instance);
 });
@@ -9,67 +11,73 @@ class DemoSeeder {
   DemoSeeder(this._db);
   final FirebaseFirestore _db;
 
-  /// 現在ユーザーの下にデモ名刺を最低5件作る
+  /// users/{ownerUid}/contacts にデモ名刺を追加する
   Future<void> seed({required String ownerUid}) async {
-    final col = _db.collection('users').doc(ownerUid).collection('contacts');
+    final contactsCol =
+        _db.collection('users').doc(ownerUid).collection('contacts');
 
-    // 既に十分あるなら何もしない
-    final existing = await col.limit(1).get();
-    if (existing.docs.isNotEmpty) return;
-
-    final batch = _db.batch();
-    final now = DateTime.now();
-    final data = [
+    // 追加するデモデータ（Contactモデルのスキーマに合わせる）
+    final demos = <Map<String, dynamic>>[
       {
         'name': '中山 太郎',
-        'github': 'nakayama',
-        'company': 'FIT短大／中山研究室',
-        'title': '准教授',
+        'userId': 'nakayama',
+        'bio': '研究指導・プロジェクト推進',
+        'githubUsername': 'nakayama',
         'skills': ['画像情報処理', 'Python', '教育'],
-        'note': '研究指導・プロジェクト推進',
-        'createdAt': now,
+        'company': 'FIT短大／中山研究室',
+        'role': '准教授',
+        'avatarUrl': null,
       },
       {
         'name': '市來 健一',
-        'github': 'nayu104',
-        'company': 'TechCard Project',
-        'title': '学生エンジニア',
+        'userId': 'nayu104',
+        'bio': '名刺交換アプリ開発中',
+        'githubUsername': 'nayu104',
         'skills': ['Flutter', 'React', 'C++', 'データ可視化'],
-        'note': '名刺交換アプリ開発',
-        'createdAt': now,
+        'company': 'TechCard Project',
+        'role': '学生エンジニア',
+        'avatarUrl': null,
       },
       {
-        'name': '田中 花子',
-        'github': 'error_hanako',
-        'company': 'Fukuoka Systems',
-        'title': 'フロントエンド',
-        'skills': ['TypeScript', 'Next.js', 'UI/UX'],
-        'note': 'デザインもいける',
-        'createdAt': now,
+        'name': '佐藤 花子',
+        'userId': 'hanako_s',
+        'bio': 'UI/UX とデザインシステム担当',
+        'githubUsername': 'hanako-sample',
+        'skills': ['Figma', 'Design System', 'Dart'],
+        'company': 'TechCard Project',
+        'role': 'Designer',
+        'avatarUrl': null,
       },
       {
-        'name': '斎藤 蓮',
-        'github': 'ren_saito',
-        'company': 'DataWorks',
-        'title': 'データエンジニア',
-        'skills': ['Python', 'Pandas', 'ETL'],
-        'note': '可視化好き',
-        'createdAt': now,
+        'name': '鈴木 次郎',
+        'userId': 'jiro_suzuki',
+        'bio': 'クラウド基盤とセキュリティ',
+        'githubUsername': 'jiro-cloud',
+        'skills': ['GCP', 'Firebase', 'SecOps'],
+        'company': 'Cloud Ops',
+        'role': 'SRE',
+        'avatarUrl': null,
       },
       {
-        'name': 'Lee Min',
-        'github': 'lee_min',
-        'company': 'CloudNine',
-        'title': 'SRE',
-        'skills': ['GCP', 'Kubernetes', 'Terraform'],
-        'note': '信頼性・運用',
-        'createdAt': now,
+        'name': '田中 三郎',
+        'userId': 'saburo_t',
+        'bio': 'データ可視化が好き',
+        'githubUsername': 'saburo-dev',
+        'skills': ['Python', 'Pandas', 'Viz'],
+        'company': 'Data Works',
+        'role': 'Data Engineer',
+        'avatarUrl': null,
       },
     ];
 
-    for (final d in data) {
-      final doc = col.doc();
-      batch.set(doc, d);
+    // バッチで投入（createdAt を付与して一覧の orderBy 用にする）
+    final batch = _db.batch();
+    for (final d in demos) {
+      final docRef = contactsCol.doc(); // 自動ID
+      batch.set(docRef, {
+        ...d,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
     }
     await batch.commit();
   }
