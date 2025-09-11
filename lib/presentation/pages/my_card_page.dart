@@ -157,8 +157,10 @@ class MyCardPage extends ConsumerWidget {
                             final now = DateTime.now();
                             final count = list.where((a) {
                               final dt = a.occurredAt;
-                              final sameMonth = dt.year == now.year && dt.month == now.month;
-                              return sameMonth && a.kind == ActivityKind.exchange;
+                              final sameMonth =
+                                  dt.year == now.year && dt.month == now.month;
+                              return sameMonth &&
+                                  a.kind == ActivityKind.exchange;
                             }).length;
                             return count.toString();
                           },
@@ -241,13 +243,8 @@ class MyCardPage extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // 地図ベースの交換履歴表示（テキストベースの活動履歴を置き換え）
-                  const Text('交換履歴マップ',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 8),
-                  const Text('過去の名刺交換を地図上で確認できます',
-                      style: TextStyle(color: Colors.grey, fontSize: 14)),
-                  const SizedBox(height: 12),
+                  // 活動ログ一覧
+                  const ActivitiesList(),
                 ],
               ),
 

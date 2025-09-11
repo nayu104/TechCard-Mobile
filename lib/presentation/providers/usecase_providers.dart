@@ -14,7 +14,8 @@ final getProfileUseCaseProvider =
 });
 
 // 交換履歴（直近50件）: 自分が承認した交換の位置情報を含む
-final exchangesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final exchangesProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final auth = ref.watch(authStateProvider);
   return await auth.when(
     data: (user) async {
@@ -33,53 +34,27 @@ final exchangesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async
 });
 
 // Map表示用に、現在の名刺一覧に存在する相手のみを抽出
-final mapExchangesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  try {
-    final exchanges = await ref.watch(exchangesProvider.future);
-    final contacts = await ref.watch(firebaseContactsProvider.future);
-    final contactIds = contacts.map((c) => c.userId).toSet();
-    final filteredExchanges = exchanges.where((e) => contactIds.contains(e['peerUserId'] as String? ?? '')).toList();
-    
-    // テスト用: 交換履歴がない場合はダミーデータを表示
-    if (filteredExchanges.isEmpty) {
-      return [
-        {
-          'id': 'test1',
-          'peerName': 'テストユーザー1',
-          'peerUserId': 'test_user_1',
-          'exchangedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
-          'location': GeoPoint(35.681236, 139.767125), // 東京駅
-        },
-        {
-          'id': 'test2', 
-          'peerName': 'テストユーザー2',
-          'peerUserId': 'test_user_2',
-          'exchangedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 3))),
-          'location': GeoPoint(35.658581, 139.745438), // 浅草寺
-        },
-      ];
-    }
-    
-    return filteredExchanges;
-  } catch (e) {
-    // エラーが発生した場合はダミーデータを返す
-    return [
-      {
-        'id': 'test1',
-        'peerName': 'テストユーザー1',
-        'peerUserId': 'test_user_1',
-        'exchangedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
-        'location': GeoPoint(35.681236, 139.767125), // 東京駅
-      },
-      {
-        'id': 'test2', 
-        'peerName': 'テストユーザー2',
-        'peerUserId': 'test_user_2',
-        'exchangedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 3))),
-        'location': GeoPoint(35.658581, 139.745438), // 浅草寺
-      },
-    ];
-  }
+final mapExchangesProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  // 常にダミーデータを返す（テスト用）
+  return [
+    {
+      'id': 'test1',
+      'peerName': 'テストユーザー1',
+      'peerUserId': 'test_user_1',
+      'exchangedAt':
+          Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
+      'location': GeoPoint(35.681236, 139.767125), // 東京駅
+    },
+    {
+      'id': 'test2',
+      'peerName': 'テストユーザー2',
+      'peerUserId': 'test_user_2',
+      'exchangedAt':
+          Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 3))),
+      'location': GeoPoint(35.658581, 139.745438), // 浅草寺
+    },
+  ];
 });
 
 // 交換申請（受信）件数
@@ -223,7 +198,8 @@ final isRefreshingActivitiesProvider = StateProvider<bool>((ref) => false);
 
 // 交換申請（受信）一覧
 // 認証ユーザーの受信申請を取得（pending のみ）
-final friendRequestsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) {
+final friendRequestsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) {
   final authState = ref.watch(authStateProvider);
   return authState.when(
     data: (user) async {
@@ -237,7 +213,8 @@ final friendRequestsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
 });
 
 // 申請承認アクション
-final acceptFriendRequestActionProvider = Provider<Future<void> Function(String)>((ref) {
+final acceptFriendRequestActionProvider =
+    Provider<Future<void> Function(String)>((ref) {
   return (String requestId) async {
     final repo = ref.read(userRepositoryProvider);
     await repo.acceptFriendRequest(requestId);
@@ -248,7 +225,8 @@ final acceptFriendRequestActionProvider = Provider<Future<void> Function(String)
 });
 
 // 申請却下アクション
-final declineFriendRequestActionProvider = Provider<Future<void> Function(String)>((ref) {
+final declineFriendRequestActionProvider =
+    Provider<Future<void> Function(String)>((ref) {
   return (String requestId) async {
     final repo = ref.read(userRepositoryProvider);
     await repo.updateFriendRequestStatus(requestId, 'declined');
@@ -257,7 +235,8 @@ final declineFriendRequestActionProvider = Provider<Future<void> Function(String
 });
 
 // 申請キャンセル（送信側がキャンセルする場合に利用可）
-final cancelFriendRequestActionProvider = Provider<Future<void> Function(String)>((ref) {
+final cancelFriendRequestActionProvider =
+    Provider<Future<void> Function(String)>((ref) {
   return (String requestId) async {
     final repo = ref.read(userRepositoryProvider);
     await repo.updateFriendRequestStatus(requestId, 'canceled');
