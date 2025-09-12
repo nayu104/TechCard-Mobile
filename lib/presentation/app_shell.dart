@@ -125,8 +125,6 @@ class AppShell extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: Colors.green),
-              const SizedBox(width: 8),
               Text(
                 userName,
                 style: const TextStyle(fontWeight: FontWeight.w600),

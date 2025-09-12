@@ -158,7 +158,8 @@ final githubLoginProvider = Provider<Future<void> Function()>((ref) {
 
       await userRepo.saveUserProfile(user.uid, profile);
       try {
-        await userRepo.assignInitialHandle(uid: user.uid, userId: profile.userId);
+        await userRepo.assignInitialHandle(
+            uid: user.uid, userId: profile.userId);
       } catch (_) {}
     }
 
@@ -166,3 +167,92 @@ final githubLoginProvider = Provider<Future<void> Function()>((ref) {
     ref.invalidate(firebaseProfileProvider);
   };
 });
+
+/// 既存ユーザーに GitHub をリンク（匿名→GitHub連携を含む）
+final linkGithubProvider = Provider<Future<String?> Function()>((ref) {
+  return () async {
+    final auth = ref.read(authServiceProvider);
+    final repo = ref.read(userRepositoryProvider);
+
+    final before = auth.currentUser; // ゲストUID等
+    UserCredential cred;
+    try {
+      cred = await auth.linkWithGithub();
+    } on FirebaseAuthException catch (e) {
+      // 既に別アカウントにリンク済み → サインインに切り替え
+      if (e.code == 'provider-already-linked' ||
+          e.code == 'credential-already-in-use' ||
+          e.code == 'account-exists-with-different-credential') {
+        cred = await auth.signInWithGithub();
+      } else {
+        rethrow;
+      }
+    }
+
+    final after = cred.user ?? auth.currentUser;
+    if (after == null) {
+      throw Exception('GitHub連携に失敗しました');
+    }
+
+    // UIDが変わったら（ゲスト→既存GitHubアカウント）データ引き継ぎを促す
+    if (before != null && before.uid != after.uid) {
+      // 呼び出し元でダイアログを出すための合図（callerで判断）
+      // ここでは移行処理は行わず、同一プロセスでの移行関数を提供
+      // メッセージを返す: 'migrate:<fromUid>:<toUid>'
+      return 'migrate:${before.uid}:${after.uid}';
+    }
+
+    // プロフィール補完・新規作成
+    final existing = await repo.getUserProfile(after.uid);
+    final username = cred.additionalUserInfo?.username;
+    if (existing != null) {
+      if ((existing.github == null || existing.github!.isEmpty) &&
+          username != null &&
+          username.isNotEmpty) {
+        final updated = existing.copyWith(
+          github: 'https://github.com/$username',
+          avatar: (existing.avatar.isEmpty && after.photoURL != null)
+              ? after.photoURL!
+              : existing.avatar,
+          updatedAt: DateTime.now(),
+        );
+        await repo.saveUserProfile(after.uid, updated);
+      }
+    } else {
+      final displayName = after.displayName ?? username ?? 'User';
+      final userId = (username != null && username.isNotEmpty)
+          ? 'gh_$username'
+          : 'gh_${after.uid.substring(0, 6)}';
+      final profile = MyProfile(
+        avatar: after.photoURL ?? '',
+        name: displayName,
+        userId: userId,
+        email: after.email ?? '',
+        github: username != null ? 'https://github.com/$username' : null,
+        friendIds: const [],
+        skills: const [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await repo.saveUserProfile(after.uid, profile);
+      try {
+        await repo.assignInitialHandle(uid: after.uid, userId: profile.userId);
+      } catch (_) {}
+    }
+
+    ref.invalidate(firebaseProfileProvider);
+    return null; // 正常終了
+  };
+});
+
+// ゲスト→GitHub へユーザーデータを移行するためのヘルパー
+final migrateGuestDataProvider = Provider<
+    Future<void> Function({required String fromUid, required String toUid})>(
+  (ref) {
+    return ({required String fromUid, required String toUid}) async {
+      final repo = ref.read(userRepositoryProvider);
+      await repo.migrateGuestDataToUid(fromUid: fromUid, toUid: toUid);
+      ref.invalidate(firebaseProfileProvider);
+    };
+  },
+);

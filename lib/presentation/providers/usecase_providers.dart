@@ -36,25 +36,54 @@ final exchangesProvider =
 // Map表示用に、現在の名刺一覧に存在する相手のみを抽出
 final mapExchangesProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  // 常にダミーデータを返す（テスト用）
-  return [
-    {
-      'id': 'test1',
-      'peerName': 'テストユーザー1',
-      'peerUserId': 'test_user_1',
-      'exchangedAt':
-          Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 1))),
-      'location': GeoPoint(35.681236, 139.767125), // 東京駅
+  final auth = ref.watch(authStateProvider);
+  return await auth.when(
+    data: (user) async {
+      if (user == null) return [];
+      try {
+        final snap = await FirebaseFirestore.instance
+            .collection('exchanges')
+            .where('ownerUid', isEqualTo: user.uid)
+            .orderBy('exchangedAt', descending: true)
+            .limit(100)
+            .get();
+        final list = snap.docs
+            .map((d) => {'id': d.id, ...d.data()})
+            .where((m) => m['location'] != null)
+            .toList();
+        return list;
+      } on Exception {
+        return [];
+      }
     },
-    {
-      'id': 'test2',
-      'peerName': 'テストユーザー2',
-      'peerUserId': 'test_user_2',
-      'exchangedAt':
-          Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 3))),
-      'location': GeoPoint(35.658581, 139.745438), // 浅草寺
+    loading: () async => [],
+    error: (_, __) async => [],
+  );
+});
+
+/// 今月の交換回数（Firestoreの exchanges から集計）
+final monthlyExchangeCountProvider = FutureProvider<int>((ref) async {
+  final auth = ref.watch(authStateProvider);
+  return await auth.when(
+    data: (user) async {
+      if (user == null) return 0;
+      try {
+        final now = DateTime.now();
+        final threshold = now.subtract(const Duration(days: 30));
+        final snap = await FirebaseFirestore.instance
+            .collection('exchanges')
+            .where('ownerUid', isEqualTo: user.uid)
+            .where('exchangedAt',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(threshold))
+            .get();
+        return snap.size;
+      } on Exception {
+        return 0;
+      }
     },
-  ];
+    loading: () async => 0,
+    error: (_, __) async => 0,
+  );
 });
 
 // 交換申請（受信）件数
@@ -138,8 +167,44 @@ final FutureProviderFamily<Contact?, String> contactUpdateProvider =
 
 /// 活動ログ一覧状態。
 final activitiesProvider = FutureProvider<List<ActivityItem>>((ref) async {
-  final uc = await ref.watch(getActivitiesUseCaseProvider.future);
-  return uc();
+  // Firestore exchanges から直近3日・最大15件を「交換しました！」として構築
+  final auth = ref.watch(authStateProvider);
+  return await auth.when(
+    data: (user) async {
+      if (user == null) return [];
+      try {
+        final since = DateTime.now().subtract(const Duration(days: 3));
+        final snap = await FirebaseFirestore.instance
+            .collection('exchanges')
+            .where('ownerUid', isEqualTo: user.uid)
+            .where('exchangedAt',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(since))
+            .orderBy('exchangedAt', descending: true)
+            .limit(15)
+            .get();
+
+        final items = <ActivityItem>[];
+        for (final d in snap.docs) {
+          final data = d.data();
+          final peerName = (data['peerName'] as String?) ?? '';
+          final exchangedAt = (data['exchangedAt'] as Timestamp?)?.toDate() ??
+              (data['createdAt'] as Timestamp?)?.toDate() ??
+              DateTime.now();
+          items.add(ActivityItem(
+            id: d.id,
+            title: '${peerName.isNotEmpty ? peerName : '相手'} と交換しました！',
+            kind: ActivityKind.exchange,
+            occurredAt: exchangedAt,
+          ));
+        }
+        return items;
+      } on Exception {
+        return [];
+      }
+    },
+    loading: () async => [],
+    error: (_, __) async => [],
+  );
 });
 
 /// プロフィール状態。nullは未設定を示す。
@@ -218,6 +283,17 @@ final acceptFriendRequestActionProvider =
   return (String requestId) async {
     final repo = ref.read(userRepositoryProvider);
     await repo.acceptFriendRequest(requestId);
+    // 活動ログを更新（今月の交換/活動履歴のため）
+    try {
+      final activityRepo = await ref.read(activityRepositoryProvider.future);
+      await activityRepo.addActivity(ActivityItem(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: '名刺を交換しました',
+        kind: ActivityKind.exchange,
+        occurredAt: DateTime.now(),
+      ));
+      ref.invalidate(activitiesProvider);
+    } catch (_) {}
     // 一覧更新
     ref.invalidate(friendRequestsProvider);
     ref.invalidate(firebaseContactsProvider);

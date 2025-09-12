@@ -138,31 +138,44 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
                     itemCount: selectedSkills.length,
                     itemBuilder: (context, index) {
                       final skill = selectedSkills[index];
-                      return InputChip(
-                        label: Text(skill),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 4),
-                        onDeleted: () => _removeSkill(skill),
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .secondaryContainer
-                            .withValues(alpha: 0.5),
-                        deleteIconColor:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
-                        deleteIcon: const Icon(
-                          Icons.cancel, // デフォルトで使用されるアイコン
-                          size: 14, // ここでサイズを指定（double→int）
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFFFFCC80),
+                              Color(0xFFFF8F00),
+                              Color(0xFFF4511E)
+                            ],
+                          ),
                         ),
-                        labelStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSecondaryContainer,
-                        ),
-                        side: BorderSide(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withValues(alpha: 0.2),
+                        child: Padding(
+                          padding: const EdgeInsets.all(1.5), // 枠線として見せる
+                          child: InputChip(
+                            label: Text(skill),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 2, horizontal: 10),
+                            onDeleted: () => _removeSkill(skill),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.surface,
+                            deleteIconColor:
+                                Theme.of(context).colorScheme.onSurface,
+                            deleteIcon: const Icon(
+                              Icons.cancel,
+                              size: 14,
+                            ),
+                            labelStyle: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            shape: StadiumBorder(
+                              side: BorderSide(
+                                color: Colors.transparent,
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -185,11 +198,16 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
                     .map((opt) => ActionChip(
                           label: Text(opt),
                           padding: const EdgeInsets.symmetric(
-                              vertical: 2, horizontal: 4),
+                              vertical: 2, horizontal: 12),
                           onPressed: () {
                             _addSkill(opt);
-                            _searchController.clear(); // UX向上のため、選択後に検索欄をクリア
+                            _searchController.clear();
                           },
+                          backgroundColor:
+                              Theme.of(context).colorScheme.surface,
+                          side: BorderSide(
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ))
                     .toList(),
               ),

@@ -6,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../domain/models.dart';
 import '../../providers/providers.dart';
 import 'user_preview_dialog.dart';
+import '../common/gradient_outline_pill_button.dart';
 
 /// QRコードをスキャンして名刺交換を行うセクション。
 /// MobileScannerで検出→最初の値を採用し、結果をトースト表示。
@@ -27,7 +28,7 @@ class QrScanCard extends ConsumerWidget {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
-            child: _GradientOutlinePillButton(
+            child: GradientOutlinePillButton(
               icon: Icons.qr_code_scanner,
               label: 'QRコードをスキャン',
               onPressed: () async {
@@ -173,67 +174,5 @@ class QrScanCard extends ConsumerWidget {
       // Debug logging removed for production
       await Fluttertoast.showToast(msg: '検索に失敗しました: $e');
     }
-  }
-}
-
-class _GradientOutlinePillButton extends StatelessWidget {
-  const _GradientOutlinePillButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    // ダーク時は白、ライト時は黒
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? Colors.white : Colors.black;
-    final radius = BorderRadius.circular(24);
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color(0xFFFFF176), // yellow 300
-            Color(0xFFFFA000), // amber 700
-            Color(0xFFE53935), // red 600
-          ],
-        ),
-        borderRadius: BorderRadius.all(Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.all(1.5), // 枠線の太さ
-      child: Material(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: radius,
-        child: InkWell(
-          borderRadius: radius,
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Icon(icon, color: fg),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: fg,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

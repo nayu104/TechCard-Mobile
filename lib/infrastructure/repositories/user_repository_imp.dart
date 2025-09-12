@@ -171,13 +171,36 @@ class UserRepositoryImpl {
   // 受信した交換申請の取得（pendingのみ）
   Future<List<Map<String, dynamic>>> getIncomingRequests(String uid) async {
     try {
-      final snap = await _db
-          .collection('friend_requests')
-          .where('receiverUid', isEqualTo: uid)
-          .where('status', isEqualTo: 'pending')
-          .orderBy('createdAt', descending: true)
-          .get();
-      return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      // メイン経路: 複合インデックスがある場合
+      try {
+        final snap = await _db
+            .collection('friend_requests')
+            .where('receiverUid', isEqualTo: uid)
+            .where('status', isEqualTo: 'pending')
+            .orderBy('createdAt', descending: true)
+            .get();
+        return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+      } on Exception {
+        // フォールバック: インデックス未作成などで失敗した場合は単一条件 + クライアント側フィルタ/ソート
+        final snap = await _db
+            .collection('friend_requests')
+            .where('receiverUid', isEqualTo: uid)
+            .get();
+        final list = snap.docs
+            .map((d) => {'id': d.id, ...d.data()})
+            .where((m) => (m['status'] as String?) == 'pending')
+            .toList();
+        list.sort((a, b) {
+          final at = a['createdAt'];
+          final bt = b['createdAt'];
+          // createdAt が null の場合は後ろへ
+          if (at == null && bt == null) return 0;
+          if (at == null) return 1;
+          if (bt == null) return -1;
+          return bt.compareTo(at);
+        });
+        return list;
+      }
     } on Exception {
       return [];
     }
@@ -494,6 +517,132 @@ Future<List<Contact>> getContacts(String uid) async {
       // プロフィール差分更新エラー
       return null;
     }
+  }
+
+  // ゲストUIDから本UIDへのデータ移行
+  Future<void> migrateGuestDataToUid({
+    required String fromUid,
+    required String toUid,
+  }) async {
+    if (fromUid == toUid) return;
+    // 1) users_v01 の統合
+    try {
+      final fromDoc = await _db.collection('users_v01').doc(fromUid).get();
+      if (fromDoc.exists && fromDoc.data() != null) {
+        final data = Map<String, dynamic>.from(fromDoc.data()!);
+        await _db
+            .collection('users_v01')
+            .doc(toUid)
+            .set(data, SetOptions(merge: true));
+      }
+    } catch (_) {}
+
+    // 2) public_profiles の ownerUid を toUid に更新（userId は維持）
+    try {
+      // userId は users_v01 由来のデータを信頼
+      final toUser = await _db.collection('users_v01').doc(toUid).get();
+      final userId = (toUser.data() ?? const {})['userId']?.toString();
+      if (userId != null && userId.isNotEmpty) {
+        await _db.collection('public_profiles').doc(userId).set({
+          'ownerUid': toUid,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        await _db.collection('user_ids').doc(userId).set({
+          'ownerUid': toUid,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {}
+
+    // 3) exchanges の ownerUid を更新
+    try {
+      final snaps = await _db
+          .collection('exchanges')
+          .where('ownerUid', isEqualTo: fromUid)
+          .limit(500)
+          .get();
+      final batch = _db.batch();
+      for (final d in snaps.docs) {
+        batch.update(d.reference, {
+          'ownerUid': toUid,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+      await batch.commit();
+    } catch (_) {}
+  }
+
+  /// ユーザーIDをアトミックに変更する
+  /// 影響範囲:
+  /// - user_ids: 新IDを予約、旧IDを解放（本人所有時）
+  /// - public_profiles: ドキュメントIDを新IDへ移行（内容は維持し userId を更新）
+  /// - users_v01: userId フィールドを更新
+  Future<void> updateUserIdAtomic({
+    required String uid,
+    required String oldUserId,
+    required String newUserId,
+  }) async {
+    final newId = newUserId.replaceFirst(RegExp(r'^@'), '');
+    // 形式チェック（英数字/アンダースコア/ハイフン、3〜30）
+    if (!RegExp(r'^[A-Za-z0-9_-]{3,30}$').hasMatch(newId)) {
+      throw ArgumentError('invalid_user_id_format');
+    }
+
+    await _db.runTransaction((txn) async {
+      // 参照定義
+      final newIdRef = _db.collection('user_ids').doc(newId);
+      final oldIdRef = _db.collection('user_ids').doc(oldUserId);
+      final oldPubRef = _db.collection('public_profiles').doc(oldUserId);
+      final newPubRef = _db.collection('public_profiles').doc(newId);
+      final userDoc = _db.collection('users_v01').doc(uid);
+
+      // すべての読み取りを先に行う（トランザクション要件）
+      final newIdSnap = await txn.get(newIdRef);
+      final oldIdSnap = await txn.get(oldIdRef);
+      final oldPubSnap = await txn.get(oldPubRef);
+
+      if (newIdSnap.exists) {
+        throw Exception('user_id_taken');
+      }
+
+      Map<String, dynamic> oldData = {};
+      if (oldPubSnap.exists && oldPubSnap.data() != null) {
+        oldData = Map<String, dynamic>.from(oldPubSnap.data()!);
+      }
+
+      // 読み取り完了後に書き込みを実行
+      txn.set(newIdRef, {
+        'ownerUid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (oldUserId.isNotEmpty &&
+          oldIdSnap.exists &&
+          (oldIdSnap.data() as Map<String, dynamic>)['ownerUid'] == uid) {
+        txn.delete(oldIdRef);
+      }
+
+      txn.set(
+          newPubRef,
+          {
+            ...oldData,
+            'userId': newId,
+            'ownerUid': uid,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+      if (oldPubSnap.exists) {
+        txn.delete(oldPubRef);
+      }
+
+      txn.set(
+          userDoc,
+          {
+            'userId': newId,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+    });
   }
 
   // GitHub URLからユーザー名を抽出

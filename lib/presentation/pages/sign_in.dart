@@ -108,6 +108,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                   const SizedBox(width: 8),
                                   Text(
                                     'はじめる',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: fg,
                                       fontWeight: FontWeight.bold,
@@ -162,6 +164,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             )
                           : const Text(
                               'Githubでログイン',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                       //ボタンの見た目

@@ -78,10 +78,12 @@ class CustomTextField extends StatelessWidget {
             color: onSurface.withValues(alpha: 0.5),
             fontSize: 12,
           ),
-          floatingLabelBehavior: FloatingLabelBehavior.always,
+          floatingLabelBehavior: hintText == null
+              ? FloatingLabelBehavior.auto
+              : FloatingLabelBehavior.always,
           focusedBorder: UnderlineInputBorder(
-            borderSide: focusedBorderSide ??
-                BorderSide(color: primary, width: 2),
+            borderSide:
+                focusedBorderSide ?? BorderSide(color: primary, width: 2),
           ),
         ),
         cursorColor: primary,

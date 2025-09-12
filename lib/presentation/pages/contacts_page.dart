@@ -89,17 +89,13 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
             ],
           ),
         ),
-        error: (e, _) => Center(
+        error: (_, __) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               const Text('読み込みに失敗しました', style: TextStyle(fontSize: 16)),
-              const SizedBox(height: 8),
-              Text('エラー: $e',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                  textAlign: TextAlign.center),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref.invalidate(firebaseContactsProvider),
@@ -255,13 +251,17 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
             itemBuilder: (context, index) {
               final req = requests[index];
               final id = req['id'] as String;
-              final senderUserId = req['senderUserId']?.toString() ?? '';
-              final createdAt = req['createdAt'];
+              final senderName = (req['senderName']?.toString() ?? '').isNotEmpty
+                  ? req['senderName'].toString()
+                  : 'ユーザー';
+              final senderAvatar = req['senderAvatar']?.toString();
               return Card(
                 child: ListTile(
-                  leading: const Icon(Icons.person_add_alt_1),
-                  title: Text('@$senderUserId からの申請'),
-                  subtitle: Text(createdAt != null ? '受信: $createdAt' : ''),
+                  leading: senderAvatar != null && senderAvatar.isNotEmpty
+                      ? CircleAvatar(backgroundImage: NetworkImage(senderAvatar))
+                      : const CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(senderName, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: null,
                   trailing: Wrap(spacing: 8, children: [
                     OutlinedButton(
                       onPressed: () async {

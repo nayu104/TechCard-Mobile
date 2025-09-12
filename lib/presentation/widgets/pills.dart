@@ -1,8 +1,6 @@
 // 目的: ステータス表示用の簡易Pill。視認性重視、タップ不可のラベル用途。
 import 'package:flutter/material.dart';
 
-
-
 class DevPill extends StatelessWidget {
   const DevPill({super.key});
 
@@ -32,26 +30,31 @@ class SkillChip extends StatelessWidget {
 
   /// スキルを示すChipを描画。ダーク/ライトで配色調整。
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      margin: const EdgeInsets.only(right: 8, bottom: 8),
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Color(0xFFFFF176), // yellow 300
-            Color(0xFFFFA000), // amber 700
-            Color(0xFFF4511E), // deep orange 600
-          ],
-          stops: [0.0, 0.6, 1.0],
-        ),
         borderRadius: BorderRadius.circular(999),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFCC80), Color(0xFFFF8F00), Color(0xFFF4511E)],
+        ),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: isDark ? Colors.black : Colors.black87, fontSize: 12)),
+      child: Padding(
+        padding: const EdgeInsets.all(1.5),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+                color: onSurface, fontWeight: FontWeight.w600, fontSize: 12),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -34,7 +34,7 @@ class QrDialog extends StatelessWidget {
       );
     }
 
-    // @マークを付けてユーザーID形式にする
+    // QRデータは内部的に @userId を保持するが、画面表示は名前優先
     final qrData = data.startsWith('@') ? data : '@$data';
 
     // Debug logging removed for production
@@ -102,16 +102,11 @@ class QrDialog extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         const SizedBox(height: 8),
-        Text(
-          qrData,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-          textAlign: TextAlign.center,
-        ),
+        // ユーザーIDの露出は避けるため非表示
       ]),
       actions: [
         TextButton(

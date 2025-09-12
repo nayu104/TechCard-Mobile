@@ -12,6 +12,7 @@ import '../providers/skills/editing_skills_provider.dart';
 import '../widgets/my_card/actions_row.dart';
 import '../widgets/my_card/activities_list.dart';
 import '../widgets/my_card/profile_header_card.dart';
+import 'edit_profile_page.dart';
 import '../widgets/my_card/stat_card.dart';
 import '../widgets/my_card/exchange_map_banner.dart';
 import '../widgets/pills.dart';
@@ -33,7 +34,7 @@ class MyCardPage extends ConsumerWidget {
     final profileAsync = ref.watch(firebaseProfileProvider);
     // 統計用: 名刺数（つながり）と今月の交換回数
     final contactsAsync = ref.watch(firebaseContactsProvider);
-    final activitiesAsync = ref.watch(activitiesProvider);
+    // activitiesProvider は最近の活動の再取得トリガにのみ使用
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -50,216 +51,165 @@ class MyCardPage extends ConsumerWidget {
 
           return Stack(
             children: [
-              ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: Stack(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ProfileHeaderContent(
-                                  isEditing: false, // 常に表示モード
-                                  controllerName: controllerName,
-                                  controllerId: controllerId,
-                                  displayName: profile?.name ?? '未設定',
-                                  // ADDED COMMENT: 表示はusername優先（URLから抽出）。
-                                  // 未設定は空文字。
-                                  displayGithub:
-                                      _extractGithubUsername(profile?.github) ??
-                                          '',
-                                ),
-                                const SizedBox(height: 12),
-                                // ひとことメッセージの表示
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('ひとことメッセージ：',
+              RefreshIndicator(
+                onRefresh: () async {
+                  try {
+                    ref.invalidate(activitiesProvider);
+                    ref.invalidate(monthlyExchangeCountProvider);
+                    await ref.read(activitiesProvider.future);
+                  } catch (_) {}
+                },
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Card(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ProfileHeaderContent(
+                                    isEditing: false, // 常に表示モード
+                                    controllerName: controllerName,
+                                    controllerId: controllerId,
+                                    displayName: profile?.name ?? '未設定',
+                                    // ADDED COMMENT: 表示はusername優先（URLから抽出）。
+                                    // 未設定は空文字。
+                                    displayGithub: _extractGithubUsername(
+                                            profile?.github) ??
+                                        '',
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // ひとことメッセージの表示
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('ひとことメッセージ：',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        (profile != null &&
+                                                profile.message.isNotEmpty)
+                                            ? profile.message
+                                            : '未設定',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      (profile != null &&
-                                              profile.message.isNotEmpty)
-                                          ? profile.message
-                                          : '未設定',
-                                      style: TextStyle(
-                                          color: Theme.of(context).hintColor),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                // スキルの表示
-                                Wrap(
-                                  children: (profile?.skills ?? [])
-                                      .map((s) => SkillChip(label: s))
-                                      .toList(),
-                                ),
-                              ]),
-                        ),
-                        // 編集ボタンを右上に配置
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: TextButton.icon(
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 6),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.onSurface,
-                            ),
-                            icon: const Icon(Icons.edit, size: 18),
-                            label: Text(
-                              '編集',
-                              style: TextStyle(
-                                fontSize: responsiveFontSize(context, 12),
-                                fontWeight: FontWeight.w600,
+                                            color: Theme.of(context).hintColor),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // スキルの表示
+                                  Wrap(
+                                    children: (profile?.skills ?? [])
+                                        .map((s) => SkillChip(label: s))
+                                        .toList(),
+                                  ),
+                                ]),
+                          ),
+                          // 編集ボタンを右上に配置
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: TextButton.icon(
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onSurface,
                               ),
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: Text(
+                                '編集',
+                                style: TextStyle(
+                                  fontSize: responsiveFontSize(context, 12),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onPressed: () async {
+                                final profile =
+                                    ref.read(firebaseProfileProvider).maybeWhen(
+                                          data: (p) => p,
+                                          orElse: () => null,
+                                        );
+                                if (profile == null) return;
+                                // 画面遷移でフルスクリーン編集
+                                // ignore: use_build_context_synchronously
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        EditProfilePage(profile: profile),
+                                  ),
+                                );
+                              },
                             ),
-                            onPressed: () {
-                              ref.read(isEditingProvider.notifier).state = true;
-                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ActionsRow(
+                      // 公開プロフィールの userId を表示/コピー（Firebase AuthのUIDではない）
+                      handleText: profile?.userId ?? '',
+                      readHandle: () => profile?.userId ?? '',
+                    ),
+                    const SizedBox(height: 12),
+                    Row(children: [
+                      Expanded(
+                        child: StatCard(
+                          title: 'つながり',
+                          value: contactsAsync.maybeWhen(
+                            data: (list) => list.length.toString(),
+                            orElse: () => '0',
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ActionsRow(
-                    // 公開プロフィールの userId を表示/コピー（Firebase AuthのUIDではない）
-                    handleText: profile?.userId ?? '',
-                    readHandle: () => profile?.userId ?? '',
-                  ),
-                  const SizedBox(height: 12),
-                  Row(children: [
-                    Expanded(
-                      child: StatCard(
-                        title: 'つながり',
-                        value: contactsAsync.maybeWhen(
-                          data: (list) => list.length.toString(),
-                          orElse: () => '0',
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: StatCard(
+                          title: '今月の交換',
+                          value:
+                              ref.watch(monthlyExchangeCountProvider).maybeWhen(
+                                    data: (v) => v.toString(),
+                                    orElse: () => '0',
+                                  ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StatCard(
-                        title: '今月の交換',
-                        value: activitiesAsync.maybeWhen(
-                          data: (list) {
-                            final now = DateTime.now();
-                            final count = list.where((a) {
-                              final dt = a.occurredAt;
-                              final sameMonth =
-                                  dt.year == now.year && dt.month == now.month;
-                              return sameMonth &&
-                                  a.kind == ActivityKind.exchange;
-                            }).length;
-                            return count.toString();
-                          },
-                          orElse: () => '0',
-                        ),
-                      ),
-                    ),
-                  ]),
-                  const SizedBox(height: 12),
-                  // 交換マップバナー（タップで展開して地図を表示）
-                  const ExchangeMapBanner(),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('最近の活動',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final isRefreshing =
-                              ref.watch(isRefreshingActivitiesProvider);
-                          return GestureDetector(
-                            onTap: isRefreshing
-                                ? null
-                                : () async {
-                                    // ローディング状態を開始
-                                    ref
-                                        .read(isRefreshingActivitiesProvider
-                                            .notifier)
-                                        .state = true;
-                                    try {
-                                      // 活動ログプロバイダーを無効化して再取得
-                                      ref.invalidate(activitiesProvider);
-                                      // プロバイダーの完了を待つ
-                                      await ref.read(activitiesProvider.future);
-                                    } on Exception {
-                                      // エラーハンドリング（必要に応じてユーザーに通知）
-                                    } finally {
-                                      // ローディング状態を終了
-                                      ref
-                                          .read(isRefreshingActivitiesProvider
-                                              .notifier)
-                                          .state = false;
-                                    }
-                                  },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: isRefreshing
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.1)
-                                    : Theme.of(context).colorScheme.surface,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isRefreshing
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context).dividerColor,
-                                ),
-                              ),
-                              child: AnimatedRotation(
-                                turns: isRefreshing ? 1.0 : 0.0,
-                                duration: const Duration(milliseconds: 1000),
-                                child: isRefreshing
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : const Icon(Icons.refresh),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // 活動ログ一覧
-                  const ActivitiesList(),
-                ],
+                    ]),
+                    const SizedBox(height: 12),
+                    // 交換マップバナー（タップで展開して地図を表示）
+                    const ExchangeMapBanner(),
+                    const SizedBox(height: 12),
+                    const Text('最近の活動',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    // 活動ログ一覧
+                    const ActivitiesList(),
+                  ],
+                ),
               ),
 
-              // 編集モード時のXレイアウト
+              // 編集モード時のオーバーレイ（Webでも確実に前面に出し、背景タップ/スワイプで閉じられる）
               if (isEditing)
-                GestureDetector(
-                  // 垂直方向のドラッグが終了したときのイベント
-                  onVerticalDragEnd: (details) {
-                    // 下方向へのスワイプ速度が一定以上なら閉じる
-                    final velocity = details.primaryVelocity;
-                    if (velocity != null && velocity > 200) {
-                      ref.read(isEditingProvider.notifier).state = false;
-                    }
-                  },
-                  child: Positioned.fill(
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () =>
+                        ref.read(isEditingProvider.notifier).state = false,
+                    // 垂直方向のドラッグが終了したときのイベント
+                    onVerticalDragEnd: (details) {
+                      final velocity = details.primaryVelocity;
+                      if (velocity != null && velocity > 200) {
+                        ref.read(isEditingProvider.notifier).state = false;
+                      }
+                    },
                     child: ColoredBox(
                       color: Colors.black.withValues(alpha: 0.3),
                       child: Center(
@@ -293,6 +243,7 @@ class MyCardPage extends ConsumerWidget {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
+                                    // 左: キャンセル
                                     TextButton(
                                       onPressed: () {
                                         ref
@@ -301,6 +252,8 @@ class MyCardPage extends ConsumerWidget {
                                       },
                                       child: Text(
                                         'キャンセル',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: responsiveFontSize(
                                             context,
@@ -309,6 +262,7 @@ class MyCardPage extends ConsumerWidget {
                                         ),
                                       ),
                                     ),
+                                    // 中央: タイトル
                                     Text(
                                       'プロフィール編集',
                                       style: TextStyle(
@@ -319,17 +273,30 @@ class MyCardPage extends ConsumerWidget {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                    // 右: 保存
                                     TextButton(
                                       onPressed: () async {
-                                        await _saveProfile(
-                                            ref,
-                                            profile,
-                                            controllerName,
-                                            controllerId,
-                                            controllerMessage);
+                                        // 楽観的: 先に閉じて保存、失敗時は再オープン
+                                        ref
+                                            .read(isEditingProvider.notifier)
+                                            .state = false;
+                                        try {
+                                          await _saveProfile(
+                                              ref,
+                                              profile,
+                                              controllerName,
+                                              controllerId,
+                                              controllerMessage);
+                                        } catch (_) {
+                                          ref
+                                              .read(isEditingProvider.notifier)
+                                              .state = true;
+                                        }
                                       },
                                       child: Text(
                                         '保存',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: responsiveFontSize(
                                             context,
@@ -358,15 +325,6 @@ class MyCardPage extends ConsumerWidget {
                                         labelText: '名前(8文字まで)',
                                         hintText: 'ここに入力してください',
                                         maxLength: 8,
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      // GitHub編集
-                                      CustomTextField(
-                                        controller: controllerId,
-                                        labelText: 'テストGitHubあとでけす',
-                                        hintText: 'ユーザー名またはURL',
-                                        keyboardType: TextInputType.url,
                                       ),
                                       const SizedBox(height: 16),
 

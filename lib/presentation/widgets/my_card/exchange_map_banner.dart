@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../providers/usecase_providers.dart';
+import '../common/gradient_outline_pill_button.dart';
 
 class ExchangeMapBanner extends ConsumerStatefulWidget {
   const ExchangeMapBanner({super.key});
@@ -15,7 +16,6 @@ class ExchangeMapBanner extends ConsumerStatefulWidget {
 }
 
 class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
-  bool _expanded = false; // 折りたたみ可能
   GoogleMapController? _controller;
 
   @override
@@ -29,74 +29,58 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
     final async = ref.watch(mapExchangesProvider);
 
     return async.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (items) {
-        if (items.isEmpty) return const SizedBox.shrink();
+      loading: () => _buildCtaCard(context, null, isLoading: true),
+      error: (_, __) => _buildCtaCard(context, null, hasError: true),
+      data: (items) => _buildCtaCard(context, items),
+    );
+  }
 
-        return Column(
+  Widget _buildCtaCard(BuildContext context, List<Map<String, dynamic>>? items,
+      {bool isLoading = false, bool hasError = false}) {
+    // 件数は説明テキストを表示しない設計に変更（ボタンのみ）
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            GestureDetector(
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFFFCC80),
+                    Color(0xFFFF8F00),
+                    Color(0xFFF4511E)
+                  ],
                 ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  height: _expanded ? 240 : 72,
-                  padding: const EdgeInsets.all(12),
-                  child: _expanded
-                      ? Stack(
-                          children: [
-                            // 折りたたみボタン（左上）
-                            Positioned(
-                              left: 8,
-                              top: 8,
-                              child: Tooltip(
-                                message: '折りたたむ',
-                                child: FloatingActionButton.small(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: Colors.black,
-                                  onPressed: () =>
-                                      setState(() => _expanded = false),
-                                  child: const Icon(Icons.keyboard_arrow_up),
-                                ),
-                              ),
-                            ),
-                            // マップ本体（必ずサイズを確保）
-                            Positioned.fill(child: _buildMap(context, items)),
-                            // 全画面ボタン（右上）
-                            Positioned(
-                              right: 4,
-                              top: 4,
-                              child: Tooltip(
-                                message: '全画面',
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: IconButton(
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: Theme.of(context)
-                                          .colorScheme
-                                          .surface
-                                          .withValues(alpha: 0.8),
-                                    ),
-                                    icon: const Icon(Icons.fullscreen),
-                                    onPressed: () =>
-                                        _showFullScreenMap(context, items),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : _CollapsedBanner(count: items.length),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ],
+              ),
+              child: const Icon(Icons.map, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AbsorbPointer(
+                absorbing: isLoading || hasError,
+                child: GradientOutlinePillButton(
+                  icon: Icons.fullscreen,
+                  label: '交換した場所を見る',
+                  onPressed: () =>
+                      _showFullScreenMap(context, items ?? const []),
                 ),
               ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -157,9 +141,9 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
       }
     }
 
-    final initial = markers.isNotEmpty
-        ? markers.first.position
-        : const LatLng(35.681236, 139.767125); // 東京駅
+    // 初期位置: デフォルト座標は表示しない（マーカーが無い場合は世界全体）
+    final initial =
+        markers.isNotEmpty ? markers.first.position : const LatLng(0, 0);
 
     return Stack(
       children: [
@@ -169,14 +153,14 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
             // Webで真っ白になるのを防ぐため、必ずサイズを確保
             child: GoogleMap(
               initialCameraPosition: CameraPosition(
-                  target: initial, zoom: markers.length > 1 ? 8 : 12),
+                  target: initial, zoom: markers.isNotEmpty ? 12 : 1),
               onMapCreated: (c) async {
                 _controller = c;
                 // 全ピンが収まるように調整
                 if (bounds != null) {
                   await Future.delayed(const Duration(milliseconds: 120));
                   await _controller?.animateCamera(
-                    CameraUpdate.newLatLngBounds(bounds!, 48),
+                    CameraUpdate.newLatLngBounds(bounds, 48),
                   );
                 }
               },
@@ -225,96 +209,9 @@ class _ExchangeMapBannerState extends ConsumerState<ExchangeMapBanner> {
     return LatLngBounds(southwest: sw, northeast: ne);
   }
 
-  Widget _buildLoadingBanner() {
-    return _CollapsedBanner(
-      count: 0,
-      isLoading: true,
-    );
-  }
+  // 削除: ローディング/エラー専用バナー（CTAカードに統合）
 
-  Widget _buildErrorBanner() {
-    return _CollapsedBanner(
-      count: 0,
-      hasError: true,
-    );
-  }
-
-  Widget _buildEmptyBanner() {
-    return _CollapsedBanner(
-      count: 0,
-      isEmpty: true,
-    );
-  }
+  // 削除: 空バナー（常にCollapsedBannerに統一）
 }
 
-class _CollapsedBanner extends StatelessWidget {
-  const _CollapsedBanner({
-    required this.count,
-    this.isLoading = false,
-    this.hasError = false,
-    this.isEmpty = false,
-  });
-  final int count;
-  final bool isLoading;
-  final bool hasError;
-  final bool isEmpty;
-
-  @override
-  Widget build(BuildContext context) {
-    final textColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFCC80), Color(0xFFFF8F00), Color(0xFFF4511E)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              )
-            ],
-          ),
-          child: const Icon(Icons.map, color: Colors.white),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('交換マップ',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text(
-                _getBannerText(),
-                style: TextStyle(
-                    color: textColor.withValues(alpha: 0.7), fontSize: 12),
-              )
-            ],
-          ),
-        ),
-        const Icon(Icons.keyboard_arrow_down),
-      ],
-    );
-  }
-
-  String _getBannerText() {
-    if (isLoading) {
-      return '交換履歴を読み込み中...';
-    } else if (hasError) {
-      return '交換履歴の読み込みに失敗しました';
-    } else if (isEmpty) {
-      return '交換履歴がまだありません。名刺交換をしてみましょう！';
-    } else {
-      return '過去の交換地点を地図で確認できます';
-    }
-  }
-}
+// 削除: 旧バナー

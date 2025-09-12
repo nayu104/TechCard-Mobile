@@ -36,7 +36,7 @@ class AuthService {
   // 戻り値: UID文字列 / null（未ログイン時）
   String? get currentUid => _auth.currentUser?.uid;
 }
-  
+
 extension GithubSignIn on AuthService {
   Future<UserCredential> signInWithGithub() async {
     try {
@@ -51,6 +51,42 @@ extension GithubSignIn on AuthService {
         return await _auth.signInWithProvider(provider);
       }
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// 既存ユーザーに GitHub をリンクする（匿名含む）
+  Future<UserCredential> linkWithGithub() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'no-current-user',
+        message: 'リンクするにはログインが必要です',
+      );
+    }
+    try {
+      final provider = GithubAuthProvider()
+        ..addScope('read:user')
+        ..addScope('user:email')
+        ..setCustomParameters({'allow_signup': 'false'});
+
+      if (kIsWeb) {
+        // Web: Popup でリンク
+        // ignore: invalid_use_of_visible_for_testing_member
+        // ignore: invalid_use_of_protected_member
+        return await user.linkWithPopup(provider);
+      } else {
+        return await user.linkWithProvider(provider);
+      }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'provider-already-linked') {
+        // 既にリンク済み: 追加情報を得るため再認証
+        final provider = GithubAuthProvider()
+          ..addScope('read:user')
+          ..addScope('user:email')
+          ..setCustomParameters({'allow_signup': 'false'});
+        return await user.reauthenticateWithProvider(provider);
+      }
       rethrow;
     }
   }

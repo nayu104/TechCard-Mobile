@@ -28,7 +28,11 @@ class NearbyPlaceholderCard extends StatelessWidget {
         child: OutlinedButton.icon(
           onPressed: null,
           icon: const Icon(Icons.bluetooth_disabled),
-          label: const Text('Bluetooth検索'),
+          label: const Text(
+            'Bluetooth検索',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ),
       const Padding(

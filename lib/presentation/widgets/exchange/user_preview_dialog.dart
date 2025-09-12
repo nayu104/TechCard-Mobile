@@ -63,17 +63,6 @@ class UserPreviewDialog extends ConsumerWidget {
                   ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-
-            // ユーザーID
-            Text(
-              '@${contact.userId}',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 16),
 
             // 自己紹介
@@ -126,7 +115,11 @@ class UserPreviewDialog extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('キャンセル'),
+                    child: const Text(
+                      'キャンセル',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -138,7 +131,11 @@ class UserPreviewDialog extends ConsumerWidget {
                         Navigator.of(context).pop();
                       }
                     },
-                    child: const Text('申請を送る'),
+                    child: const Text(
+                      '申請を送る',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],

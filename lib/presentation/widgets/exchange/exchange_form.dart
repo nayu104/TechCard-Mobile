@@ -36,38 +36,23 @@ class _ExchangeFormState extends ConsumerState<ExchangeForm> {
           children: [Icon(Icons.search), SizedBox(width: 8), Text('ユーザー検索')]),
       const SizedBox(height: 12),
 
-      // 検索タイプ選択
-      Row(
+      // 検索タイプ選択（ラジオとラベルを1まとまりにして折り返し時も分離しない）
+      Wrap(
+        spacing: 16,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          Expanded(
-            child: RadioListTile<SearchType>(
-              title: const Text('ユーザーID'),
-              value: SearchType.userId,
-              groupValue: _searchType,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _searchType = value;
-                  });
-                }
-              },
-              contentPadding: EdgeInsets.zero,
-            ),
+          _RadioOption<SearchType>(
+            value: SearchType.userId,
+            groupValue: _searchType,
+            label: 'ユーザーID',
+            onChanged: (v) => setState(() => _searchType = v),
           ),
-          Expanded(
-            child: RadioListTile<SearchType>(
-              title: const Text('GitHub名'),
-              value: SearchType.github,
-              groupValue: _searchType,
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _searchType = value;
-                  });
-                }
-              },
-              contentPadding: EdgeInsets.zero,
-            ),
+          _RadioOption<SearchType>(
+            value: SearchType.github,
+            groupValue: _searchType,
+            label: 'GitHub名',
+            onChanged: (v) => setState(() => _searchType = v),
           ),
         ],
       ),
@@ -76,9 +61,6 @@ class _ExchangeFormState extends ConsumerState<ExchangeForm> {
       CustomTextField(
         controller: _controller,
         labelText: _searchType == SearchType.userId ? 'ユーザーID' : 'GitHub名',
-        hintText: _searchType == SearchType.userId
-            ? 'ユーザーID入力（例: demo）'
-            : 'GitHub名入力（例: octocat）',
       ),
       const SizedBox(height: 12),
       GoldGradientButton(
@@ -117,3 +99,43 @@ class _ExchangeFormState extends ConsumerState<ExchangeForm> {
 }
 
 enum SearchType { userId, github }
+
+class _RadioOption<T> extends StatelessWidget {
+  const _RadioOption({
+    required this.value,
+    required this.groupValue,
+    required this.label,
+    required this.onChanged,
+  });
+
+  final T value;
+  final T groupValue;
+  final String label;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: () => onChanged(value),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Radio<T>(
+            value: value,
+            groupValue: groupValue,
+            onChanged: (v) {
+              if (v != null) onChanged(v);
+            },
+            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
