@@ -53,7 +53,31 @@ final mapExchangesProvider =
             .toList();
         return list;
       } on Exception {
-        return [];
+        // フォールバック: インデックス未作成時などは orderBy を外し、クライアント側でソート
+        try {
+          final snap = await FirebaseFirestore.instance
+              .collection('exchanges')
+              .where('ownerUid', isEqualTo: user.uid)
+              .limit(200)
+              .get();
+          final list = snap.docs
+              .map((d) => {'id': d.id, ...d.data()})
+              .where((m) => m['location'] != null)
+              .toList();
+          list.sort((a, b) {
+            final ta = (a['exchangedAt'] as Timestamp?) ??
+                (a['createdAt'] as Timestamp?);
+            final tb = (b['exchangedAt'] as Timestamp?) ??
+                (b['createdAt'] as Timestamp?);
+            if (ta == null && tb == null) return 0;
+            if (ta == null) return 1;
+            if (tb == null) return -1;
+            return tb.compareTo(ta);
+          });
+          return list;
+        } on Exception {
+          return [];
+        }
       }
     },
     loading: () async => [],
@@ -196,13 +220,13 @@ final FutureProviderFamily<Contact?, String> contactUpdateProvider =
 
 /// 活動ログ一覧状態。
 final activitiesProvider = FutureProvider<List<ActivityItem>>((ref) async {
-  // Firestore exchanges から直近3日・最大15件を「交換しました！」として構築
+  // Firestore exchanges から直近30日・最大15件を「交換しました！」として構築
   final auth = ref.watch(authStateProvider);
   return await auth.when(
     data: (user) async {
       if (user == null) return [];
       try {
-        final since = DateTime.now().subtract(const Duration(days: 3));
+        final since = DateTime.now().subtract(const Duration(days: 30));
         final snap = await FirebaseFirestore.instance
             .collection('exchanges')
             .where('ownerUid', isEqualTo: user.uid)
@@ -228,7 +252,47 @@ final activitiesProvider = FutureProvider<List<ActivityItem>>((ref) async {
         }
         return items;
       } on Exception {
-        return [];
+        // フォールバック: インデックス未作成などで失敗した場合は ownerUid のみで取得し、クライアント側で期間/ソート/件数を調整
+        try {
+          final since = DateTime.now().subtract(const Duration(days: 30));
+          final snap = await FirebaseFirestore.instance
+              .collection('exchanges')
+              .where('ownerUid', isEqualTo: user.uid)
+              .limit(200)
+              .get();
+          final docs = snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+          docs.retainWhere((m) {
+            final ts = (m['exchangedAt'] as Timestamp?) ??
+                (m['createdAt'] as Timestamp?);
+            if (ts == null) return false;
+            return ts.toDate().isAfter(since);
+          });
+          docs.sort((a, b) {
+            final ta = (a['exchangedAt'] as Timestamp?) ??
+                (a['createdAt'] as Timestamp?);
+            final tb = (b['exchangedAt'] as Timestamp?) ??
+                (b['createdAt'] as Timestamp?);
+            if (ta == null && tb == null) return 0;
+            if (ta == null) return 1;
+            if (tb == null) return -1;
+            return tb.compareTo(ta);
+          });
+          final limited = docs.take(15);
+          return limited.map((m) {
+            final peerName = (m['peerName'] as String?) ?? '';
+            final exchangedAt = (m['exchangedAt'] as Timestamp?)?.toDate() ??
+                (m['createdAt'] as Timestamp?)?.toDate() ??
+                DateTime.now();
+            return ActivityItem(
+              id: m['id'] as String,
+              title: '${peerName.isNotEmpty ? peerName : '相手'} と交換しました！',
+              kind: ActivityKind.exchange,
+              occurredAt: exchangedAt,
+            );
+          }).toList();
+        } on Exception {
+          return [];
+        }
       }
     },
     loading: () async => [],

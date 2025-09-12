@@ -166,7 +166,8 @@ class UserRepositoryImpl {
   // 受信した交換申請の取得（pendingのみ）
   Future<List<Map<String, dynamic>>> getIncomingRequests(String uid) async {
     try {
-      // メイン経路: 複合インデックスがある場合
+      // 1) リクエストの基本情報を取得
+      List<Map<String, dynamic>> baseList;
       try {
         final snap = await _db
             .collection('friend_requests')
@@ -174,7 +175,7 @@ class UserRepositoryImpl {
             .where('status', isEqualTo: 'pending')
             .orderBy('createdAt', descending: true)
             .get();
-        return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+        baseList = snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
       } on Exception {
         // フォールバック: インデックス未作成などで失敗した場合は単一条件 + クライアント側フィルタ/ソート
         final snap = await _db
@@ -188,14 +189,52 @@ class UserRepositoryImpl {
         list.sort((a, b) {
           final at = a['createdAt'];
           final bt = b['createdAt'];
-          // createdAt が null の場合は後ろへ
           if (at == null && bt == null) return 0;
           if (at == null) return 1;
           if (bt == null) return -1;
           return bt.compareTo(at);
         });
-        return list;
+        baseList = list;
       }
+
+      // 2) 送信者の公開プロフィールをまとめて取得し、名前/アバターを付与
+      final senderIds = baseList
+          .map((m) => (m['senderUserId'] ?? '').toString())
+          .where((id) => id.isNotEmpty)
+          .toSet()
+          .toList();
+
+      final Map<String, Map<String, dynamic>> userIdToProfile = {};
+      // Firestore whereIn の制限に合わせてチャンク分割（最大10件単位）
+      for (var i = 0; i < senderIds.length; i += 10) {
+        final chunk = senderIds.sublist(
+            i, i + 10 > senderIds.length ? senderIds.length : i + 10);
+        try {
+          final profSnap = await _db
+              .collection('public_profiles')
+              .where(FieldPath.documentId, whereIn: chunk)
+              .get();
+          for (final d in profSnap.docs) {
+            userIdToProfile[d.id] = d.data();
+          }
+        } catch (_) {
+          // 取得失敗時はスキップ（名前は後で空文字のまま）
+        }
+      }
+
+      final enriched = baseList.map((m) {
+        final id = (m['senderUserId'] ?? '').toString();
+        final prof = userIdToProfile[id] ?? const {};
+        final senderName = (prof['name'] as String?) ?? '';
+        final senderAvatar = (prof['avatar'] as String?) ?? '';
+        return {
+          ...m,
+          if (senderName.isNotEmpty) 'senderName': senderName,
+          if (senderAvatar.isNotEmpty) 'senderAvatar': senderAvatar,
+        };
+      }).toList();
+
+      return enriched;
     } on Exception {
       return [];
     }

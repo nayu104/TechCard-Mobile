@@ -33,6 +33,22 @@ service cloud.firestore {
         && request.resource.id.matches('^[A-Za-z0-9_-]{6,30}$');
     }
 
+    // 交換履歴（exchanges）: 所有者のみ読み書き可能
+    // スキーマ想定: { ownerUid, peerUid, peerUserId, peerName, exchangedAt, createdAt, location }
+    match /exchanges/{docId} {
+      allow read, write: if request.auth != null && (
+        // 読み取り: 自分の所有データのみ
+        (request.method == 'get' || request.method == 'list') &&
+          resource.data.ownerUid == request.auth.uid
+        ||
+        // 作成: 自分が ownerUid のデータのみ
+        (request.method == 'create' && request.resource.data.ownerUid == request.auth.uid)
+        ||
+        // 更新/削除: 自分が ownerUid のデータのみ
+        ((request.method == 'update' || request.method == 'delete') && resource.data.ownerUid == request.auth.uid)
+      );
+    }
+
     // 交換申請（フレンドリクエスト）
     // スキーマ想定: { senderUid, senderUserId, receiverUid, receiverUserId, status, createdAt, updatedAt }
     // 権限:

@@ -9,7 +9,7 @@ class RiveLoader extends StatelessWidget {
       {super.key,
       required this.assetPath,
       required this.animationName,
-      this.size = 48});
+      this.size = 240});
   final String assetPath;
   final String animationName;
   final double size;
