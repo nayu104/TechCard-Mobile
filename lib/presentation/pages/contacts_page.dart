@@ -1,3 +1,5 @@
+/*
+
 // 目的: 名刺一覧画面。主要要素=リスト表示＋折りたたみ詳細＋βピル。
 // watch方針: 一覧はwatchで再ビルド。詳細の展開状態はローカルStateで最小化。
 import 'package:flutter/material.dart';
@@ -312,6 +314,105 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
             _buildRequestsTab(context),
           ],
         ),
+      ),
+    );
+  }
+}
+
+*/
+
+// lib/presentation/pages/contacts_page.dart
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/providers.dart';
+import '../widgets/contacts/contact_list_item.dart';
+import '../widgets/contacts/empty_state.dart';
+// 先頭の import 群に追加
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../providers/usecase_providers.dart';
+// デモSeederを使うため追加
+import '../../infrastructure/demo_seeder.dart';
+
+class ContactsPage extends ConsumerStatefulWidget {
+  const ContactsPage({super.key});
+
+  @override
+  ConsumerState<ContactsPage> createState() => _ContactsPageState();
+}
+
+class _ContactsPageState extends ConsumerState<ContactsPage> {
+  final Map<String, bool> _expanded = {};
+  var _showAll = false; // 全件表示フラグ
+
+  @override
+  Widget build(BuildContext context) {
+    final contactsAsync = ref.watch(firebaseContactsProvider);
+
+    return Scaffold(
+      body: contactsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('エラー: $e')),
+        data: (contacts) {
+          // 🔹 ここを修正
+          if (contacts.isEmpty) {
+            return ContactsEmptyState(
+              onTapExchange: () {
+                // 既存の「名刺交換する」ボタンの処理
+                ref.read(bottomNavProvider.notifier).state = 2;
+              },
+             onTapSeedDemo: () async {
+                try {
+                  // ここで FirebaseAuth から直接 UID を取得
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+
+                  if (uid == null) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('デモ投入にはサインインが必要です')),
+                      );
+                    }
+                    return;
+                  }
+
+                  await ref.read(demoSeederProvider).seed(ownerUid: uid);
+                  ref.invalidate(firebaseContactsProvider);
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text('デモ名刺を追加しました')));
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('デモ投入に失敗しました: $e')),
+                    );
+                  }
+                }
+              },
+
+            );
+          }
+
+          // 👇 ここから先は従来の「名刺一覧リスト」の表示処理
+          return ListView.builder(
+            itemCount: contacts.length,
+            itemBuilder: (context, index) {
+              final contact = contacts[index];
+              final isOpen = _expanded[contact.id] ?? false;
+              return ContactListItem(
+                contact: contact,
+                isOpen: isOpen,
+                onTap: () {
+                  setState(() {
+                    _expanded[contact.id] = !isOpen;
+                  });
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
