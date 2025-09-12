@@ -1,9 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-<<<<<<< HEAD
-import 'package:geolocator/geolocator.dart';
-import 'package:techcard_mobile/domain/models.dart';
-=======
->>>>>>> c35dfc721b167608abb22759f0fa487f7b0eb87b
 
 import '../../domain/entities/contact.dart';
 import '../../domain/entities/public_profile.dart';
@@ -462,36 +457,30 @@ class UserRepositoryImpl {
   }
   */
   // 名刺一覧取得（users/{uid}/contacts から直接読む版）
-Future<List<Contact>> getContacts(String uid) async {
-  try {
-    final col = _db.collection('users').doc(uid).collection('contacts');
-    // createdAt が無ければ orderBy を外してください
-    final snap = await col.orderBy('createdAt', descending: true).get();
+  Future<List<Contact>> getContacts(String uid) async {
+    try {
+      final col = _db.collection('users').doc(uid).collection('contacts');
+      // createdAt が無ければ orderBy を外してください
+      final snap = await col.orderBy('createdAt', descending: true).get();
 
-    return snap.docs.map((d) {
-      final data = d.data();
-      return Contact.fromJson({
-        'id': d.id,
-        'name': data['name'] ?? '',
-        'userId': data['userId'] ?? '',
-        'bio': data['bio'] ?? '',
-        'githubUsername': data['githubUsername'],
-        'skills': (data['skills'] as List?)?.cast<String>() ?? const [],
-        'company': data['company'],
-        'role': data['role'],
-        'avatarUrl': data['avatarUrl'],
-      });
-    }).toList();
-  } on Exception {
-    return [];
+      return snap.docs.map((d) {
+        final data = d.data();
+        return Contact.fromJson({
+          'id': d.id,
+          'name': data['name'] ?? '',
+          'userId': data['userId'] ?? '',
+          'bio': data['bio'] ?? '',
+          'githubUsername': data['githubUsername'],
+          'skills': (data['skills'] as List?)?.cast<String>() ?? const [],
+          'company': data['company'],
+          'role': data['role'],
+          'avatarUrl': data['avatarUrl'],
+        });
+      }).toList();
+    } on Exception {
+      return [];
+    }
   }
-}
-
-
-
-
-
-
 
   // 特定ユーザーのプロフィール差分更新
   // 背景: ユーザーがメッセージを更新した際、そのユーザーのみを更新したい

@@ -1,5 +1,3 @@
-/*
-
 // 目的: 名刺一覧画面。主要要素=リスト表示＋折りたたみ詳細＋βピル。
 // watch方針: 一覧はwatchで再ビルド。詳細の展開状態はローカルStateで最小化。
 import 'package:flutter/material.dart';
@@ -113,106 +111,88 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
                 child: ContactsEmptyState(
                   onTapExchange: () =>
                       ref.read(bottomNavProvider.notifier).state = 2,
-                  isLoading: _isRefreshing,
                 ),
               ),
             );
           }
-          return CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(children: [
-                        Icon(Icons.contacts,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 28),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('名刺一覧',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              Text(
-                                _showAll
-                                    ? '${contacts.length}枚の名刺（全件表示）'
-                                    : '${contacts.length}枚の名刺（${contacts.take(5).length}件表示中）',
-                                style: TextStyle(
-                                    color: Colors.grey[600], fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text('${contacts.length}',
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16)),
-                        ),
-                      ]),
+
+          // 表示件数/総件数を右下に重ねて表示するため Stack でラップ
+          final displayCount = _showAll
+              ? contacts.length
+              : (contacts.length > 5 ? 5 : contacts.length);
+
+          return Stack(children: [
+            CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final displayContacts =
+                            _showAll ? contacts : contacts.take(5).toList();
+                        if (index < displayContacts.length) {
+                          final contact = displayContacts[index];
+                          final isOpen = _expanded[contact.id] ?? false;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: ContactListItem(
+                              key: ValueKey(contact.id),
+                              contact: contact,
+                              isOpen: isOpen,
+                              onTap: () {
+                                setState(() {
+                                  _expanded[contact.id] = !isOpen;
+                                });
+                              },
+                            ),
+                          );
+                        } else {
+                          return _buildLoadMoreButton(contacts.length);
+                        }
+                      },
+                      childCount: _showAll
+                          ? contacts.length
+                          : contacts.length > 5
+                              ? 6
+                              : contacts.length,
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 200)),
+              ],
+            ),
+
+            // 右下のカウントバッジ（例: 5/45）
+            Positioned(
+              right: 20,
+              bottom: 20,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .surface
+                      .withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Text(
+                    '$displayCount/${contacts.length}',
+                    style: TextStyle(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.85),
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final displayContacts =
-                          _showAll ? contacts : contacts.take(5).toList();
-                      if (index < displayContacts.length) {
-                        final contact = displayContacts[index];
-                        final isOpen = _expanded[contact.id] ?? false;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: ContactListItem(
-                            key: ValueKey(contact.id),
-                            contact: contact,
-                            isOpen: isOpen,
-                            onTap: () {
-                              setState(() {
-                                _expanded[contact.id] = !isOpen;
-                              });
-                            },
-                          ),
-                        );
-                      } else {
-                        return _buildLoadMoreButton(contacts.length);
-                      }
-                    },
-                    childCount: _showAll
-                        ? contacts.length
-                        : contacts.length > 5
-                            ? 6
-                            : contacts.length,
-                  ),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 200)),
-            ],
-          );
+            ),
+          ]);
         },
       ),
     );
@@ -237,7 +217,10 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
               physics: const AlwaysScrollableScrollPhysics(),
               children: const [
                 SizedBox(height: 120),
-                Center(child: Image(image: AssetImage('assets/ui_image/no_request.png'), width: 160)),
+                Center(
+                    child: Image(
+                        image: AssetImage('assets/ui_image/no_request.png'),
+                        width: 160)),
                 SizedBox(height: 8),
                 Center(child: Text('交換申請はありません')),
                 SizedBox(height: 200),
@@ -251,16 +234,19 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
             itemBuilder: (context, index) {
               final req = requests[index];
               final id = req['id'] as String;
-              final senderName = (req['senderName']?.toString() ?? '').isNotEmpty
-                  ? req['senderName'].toString()
-                  : 'ユーザー';
+              final senderName =
+                  (req['senderName']?.toString() ?? '').isNotEmpty
+                      ? req['senderName'].toString()
+                      : 'ユーザー';
               final senderAvatar = req['senderAvatar']?.toString();
               return Card(
                 child: ListTile(
                   leading: senderAvatar != null && senderAvatar.isNotEmpty
-                      ? CircleAvatar(backgroundImage: NetworkImage(senderAvatar))
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(senderAvatar))
                       : const CircleAvatar(child: Icon(Icons.person)),
-                  title: Text(senderName, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text(senderName,
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
                   subtitle: null,
                   trailing: Wrap(spacing: 8, children: [
                     OutlinedButton(
@@ -314,105 +300,6 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
             _buildRequestsTab(context),
           ],
         ),
-      ),
-    );
-  }
-}
-
-*/
-
-// lib/presentation/pages/contacts_page.dart
-
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/providers.dart';
-import '../widgets/contacts/contact_list_item.dart';
-import '../widgets/contacts/empty_state.dart';
-// 先頭の import 群に追加
-import 'package:firebase_auth/firebase_auth.dart';
-
-import '../providers/usecase_providers.dart';
-// デモSeederを使うため追加
-import '../../infrastructure/demo_seeder.dart';
-
-class ContactsPage extends ConsumerStatefulWidget {
-  const ContactsPage({super.key});
-
-  @override
-  ConsumerState<ContactsPage> createState() => _ContactsPageState();
-}
-
-class _ContactsPageState extends ConsumerState<ContactsPage> {
-  final Map<String, bool> _expanded = {};
-  var _showAll = false; // 全件表示フラグ
-
-  @override
-  Widget build(BuildContext context) {
-    final contactsAsync = ref.watch(firebaseContactsProvider);
-
-    return Scaffold(
-      body: contactsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('エラー: $e')),
-        data: (contacts) {
-          // 🔹 ここを修正
-          if (contacts.isEmpty) {
-            return ContactsEmptyState(
-              onTapExchange: () {
-                // 既存の「名刺交換する」ボタンの処理
-                ref.read(bottomNavProvider.notifier).state = 2;
-              },
-             onTapSeedDemo: () async {
-                try {
-                  // ここで FirebaseAuth から直接 UID を取得
-                  final uid = FirebaseAuth.instance.currentUser?.uid;
-
-                  if (uid == null) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('デモ投入にはサインインが必要です')),
-                      );
-                    }
-                    return;
-                  }
-
-                  await ref.read(demoSeederProvider).seed(ownerUid: uid);
-                  ref.invalidate(firebaseContactsProvider);
-
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(const SnackBar(content: Text('デモ名刺を追加しました')));
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('デモ投入に失敗しました: $e')),
-                    );
-                  }
-                }
-              },
-
-            );
-          }
-
-          // 👇 ここから先は従来の「名刺一覧リスト」の表示処理
-          return ListView.builder(
-            itemCount: contacts.length,
-            itemBuilder: (context, index) {
-              final contact = contacts[index];
-              final isOpen = _expanded[contact.id] ?? false;
-              return ContactListItem(
-                contact: contact,
-                isOpen: isOpen,
-                onTap: () {
-                  setState(() {
-                    _expanded[contact.id] = !isOpen;
-                  });
-                },
-              );
-            },
-          );
-        },
       ),
     );
   }
