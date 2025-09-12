@@ -67,19 +67,48 @@ final monthlyExchangeCountProvider = FutureProvider<int>((ref) async {
   return await auth.when(
     data: (user) async {
       if (user == null) return 0;
-      try {
-        final now = DateTime.now();
-        final threshold = now.subtract(const Duration(days: 30));
-        final snap = await FirebaseFirestore.instance
-            .collection('exchanges')
-            .where('ownerUid', isEqualTo: user.uid)
-            .where('exchangedAt',
-                isGreaterThanOrEqualTo: Timestamp.fromDate(threshold))
-            .get();
-        return snap.size;
-      } on Exception {
-        return 0;
+
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+
+      Future<int> countForRole(String fieldName) async {
+        // 優先: 複合クエリ（インデックスありの場合は高速）
+        try {
+          final snap = await FirebaseFirestore.instance
+              .collection('exchanges')
+              .where(fieldName, isEqualTo: user.uid)
+              .where('exchangedAt',
+                  isGreaterThanOrEqualTo: Timestamp.fromDate(monthStart))
+              .get();
+          return snap.size;
+        } on Exception {
+          // フォールバック: インデックス未作成などで失敗した場合は単一条件取得→クライアント側で絞り込み
+          try {
+            final snap = await FirebaseFirestore.instance
+                .collection('exchanges')
+                .where(fieldName, isEqualTo: user.uid)
+                .get();
+            int count = 0;
+            for (final d in snap.docs) {
+              final data = d.data();
+              final ts = (data['exchangedAt'] as Timestamp?) ??
+                  (data['createdAt'] as Timestamp?);
+              if (ts == null) continue;
+              final dt = ts.toDate();
+              if (!dt.isBefore(monthStart)) count++;
+            }
+            return count;
+          } on Exception {
+            return 0;
+          }
+        }
       }
+
+      final List<int> results = await Future.wait<int>([
+        countForRole('ownerUid'),
+        countForRole('peerUid'),
+      ]);
+      return results.fold<int>(0, (int a, int b) => a + b);
     },
     loading: () async => 0,
     error: (_, __) async => 0,
@@ -297,6 +326,8 @@ final acceptFriendRequestActionProvider =
     // 一覧更新
     ref.invalidate(friendRequestsProvider);
     ref.invalidate(firebaseContactsProvider);
+    // 今月の交換数を更新
+    ref.invalidate(monthlyExchangeCountProvider);
   };
 });
 
