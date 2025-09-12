@@ -319,3 +319,20 @@ final cancelFriendRequestActionProvider =
     ref.invalidate(friendRequestsProvider);
   };
 });
+
+// 名刺削除アクション
+final deleteContactActionProvider =
+    Provider<Future<void> Function(String)>((ref) {
+  return (String contactUserId) async {
+    final auth = ref.read(authStateProvider);
+    final user = auth.when(
+      data: (u) => u,
+      loading: () => null,
+      error: (_, __) => null,
+    );
+    if (user == null) return;
+    final repo = ref.read(userRepositoryProvider);
+    await repo.deleteContact(ownerUid: user.uid, contactUserId: contactUserId);
+    ref.invalidate(firebaseContactsProvider);
+  };
+});

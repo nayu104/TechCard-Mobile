@@ -528,6 +528,23 @@ class UserRepositoryImpl {
     }
   }
 
+  // 名刺削除（users/{uid}/contacts/{contactUserId} を削除）
+  Future<void> deleteContact({
+    required String ownerUid,
+    required String contactUserId,
+  }) async {
+    try {
+      await _db
+          .collection('users')
+          .doc(ownerUid)
+          .collection('contacts')
+          .doc(contactUserId)
+          .delete();
+    } on Exception {
+      rethrow;
+    }
+  }
+
   // 特定ユーザーのプロフィール差分更新
   // 背景: ユーザーがメッセージを更新した際、そのユーザーのみを更新したい
   // 意図: ピンポイントで特定のプロフィールのみを取得して差分更新

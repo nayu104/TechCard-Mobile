@@ -138,6 +138,31 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
                                   _expanded[contact.id] = !isOpen;
                                 });
                               },
+                              onDelete: () async {
+                                final ok = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: const Text('確認'),
+                                        content:
+                                            Text('${contact.name} を削除しますか？'),
+                                        actions: [
+                                          TextButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(false),
+                                              child: const Text('キャンセル')),
+                                          FilledButton(
+                                              onPressed: () =>
+                                                  Navigator.of(ctx).pop(true),
+                                              child: const Text('削除')),
+                                        ],
+                                      ),
+                                    ) ??
+                                    false;
+                                if (!ok) return;
+                                final delete =
+                                    ref.read(deleteContactActionProvider);
+                                await delete(contact.userId);
+                              },
                             ),
                           );
                         } else {
@@ -238,28 +263,63 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
                       : 'ユーザー';
               final senderAvatar = req['senderAvatar']?.toString();
               return Card(
-                child: ListTile(
-                  leading: senderAvatar != null && senderAvatar.isNotEmpty
-                      ? CircleAvatar(
-                          backgroundImage: NetworkImage(senderAvatar))
-                      : const CircleAvatar(child: Icon(Icons.person)),
-                  title: Text(senderName,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: null,
-                  trailing: Wrap(spacing: 8, children: [
-                    OutlinedButton(
-                      onPressed: () async {
-                        await decline(id);
-                      },
-                      child: const Text('見送る'),
-                    ),
-                    FilledButton(
-                      onPressed: () async {
-                        await accept(id);
-                      },
-                      child: const Text('承認'),
-                    ),
-                  ]),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      senderAvatar != null && senderAvatar.isNotEmpty
+                          ? CircleAvatar(
+                              backgroundImage: NetworkImage(senderAvatar))
+                          : const CircleAvatar(child: Icon(Icons.person)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          senderName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 140),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                                minimumSize: const Size(0, 36),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: () async {
+                                await decline(id);
+                              },
+                              child: const Text('見送る'),
+                            ),
+                            const SizedBox(height: 8),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 8),
+                                minimumSize: const Size(0, 36),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: () async {
+                                await accept(id);
+                              },
+                              child: const Text('承認'),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               );
             },

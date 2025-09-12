@@ -8,10 +8,12 @@ class ContactListItem extends StatelessWidget {
       {super.key,
       required this.contact,
       required this.isOpen,
-      required this.onTap});
+      required this.onTap,
+      this.onDelete});
   final Contact contact;
   final bool isOpen;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   /// アバター画像を構築する
   Widget _buildAvatar(String? avatarUrl) {
@@ -63,29 +65,38 @@ class ContactListItem extends StatelessWidget {
                 ],
               ),
             ),
-            InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isOpen
-                      ? Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.1)
-                      : Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  isOpen ? Icons.expand_less : Icons.expand_more,
-                  color: isOpen
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey[600],
-                  size: 20,
+            Row(children: [
+              InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isOpen
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    isOpen ? Icons.expand_less : Icons.expand_more,
+                    color: isOpen
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey[600],
+                    size: 20,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: '削除',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline),
+                color: Colors.redAccent,
+              )
+            ]),
           ]),
           if (isOpen) ...[
             const SizedBox(height: 12),

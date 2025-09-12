@@ -28,40 +28,49 @@ class UserPreviewDialog extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // アバター
-            CircleAvatar(
-              radius: 40,
-              backgroundColor:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              child: (contact.avatarUrl?.isNotEmpty ?? false)
-                  ? ClipOval(
-                      child: Image.network(
-                        contact.avatarUrl!,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
+            // ヘッダー: アイコン + 名前（横並び）
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
+                  child: (contact.avatarUrl?.isNotEmpty ?? false)
+                      ? ClipOval(
+                          child: Image.network(
+                            contact.avatarUrl!,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.person,
+                              size: 28,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      : Icon(
                           Icons.person,
-                          size: 40,
+                          size: 28,
                           color: Theme.of(context).colorScheme.primary,
                         ),
-                      ),
-                    )
-                  : Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-            ),
-            const SizedBox(height: 16),
-
-            // ユーザー名
-            Text(
-              contact.name,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    contact.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
-              textAlign: TextAlign.center,
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
@@ -109,33 +118,30 @@ class UserPreviewDialog extends ConsumerWidget {
             ] else
               const SizedBox(height: 8),
 
-            // ボタン
-            Row(
+            // ボタン（縦積み）
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      'キャンセル',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'キャンセル',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () async {
-                      await onAdd();
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    child: const Text(
-                      '申請を送る',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed: () async {
+                    await onAdd();
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: const Text(
+                    '申請を送る',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
