@@ -273,7 +273,14 @@ class UserSearchResultDialog extends ConsumerWidget {
     try {
       final uid = ref.read(currentFirebaseUidProvider);
       if (uid == null || uid.isEmpty) {
-        await Fluttertoast.showToast(msg: 'ログインが必要です');
+        await Fluttertoast.showToast(
+          msg: 'ログインが必要です',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black.withValues(alpha: 0.8),
+          textColor: Colors.white,
+          fontSize: 14,
+        );
         return;
       }
 
@@ -281,7 +288,14 @@ class UserSearchResultDialog extends ConsumerWidget {
       final myProfile = await ref.read(firebaseProfileProvider.future);
       final senderUserId = myProfile?.userId;
       if (senderUserId == null || senderUserId.isEmpty) {
-        await Fluttertoast.showToast(msg: '自分のユーザーIDが未設定です');
+        await Fluttertoast.showToast(
+          msg: '自分のユーザーIDが未設定です',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black.withValues(alpha: 0.8),
+          textColor: Colors.white,
+          fontSize: 14,
+        );
         return;
       }
 
@@ -289,7 +303,14 @@ class UserSearchResultDialog extends ConsumerWidget {
       final userRepo = ref.read(userRepositoryProvider);
       final receiverPublic = await userRepo.getPublicProfile(contact.userId);
       if (receiverPublic == null) {
-        await Fluttertoast.showToast(msg: '相手の公開プロフィールが見つかりません');
+        await Fluttertoast.showToast(
+          msg: '相手の公開プロフィールが見つかりません',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black.withValues(alpha: 0.8),
+          textColor: Colors.white,
+          fontSize: 14,
+        );
         return;
       }
 
@@ -303,10 +324,24 @@ class UserSearchResultDialog extends ConsumerWidget {
         receiverUserId: receiverUserId,
       );
 
-      await Fluttertoast.showToast(msg: '交換申請を送信しました');
+      await Fluttertoast.showToast(
+        msg: '交換申請を送信しました',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     } catch (e) {
       // Debug logging removed for production
-      await Fluttertoast.showToast(msg: '申請の送信に失敗しました');
+      await Fluttertoast.showToast(
+        msg: '申請の送信に失敗しました',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     }
   }
 }

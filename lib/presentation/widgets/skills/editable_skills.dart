@@ -65,7 +65,14 @@ class _EditableSkillsState extends ConsumerState<EditableSkills> {
     final skills = ref.read(editingSkillsProvider);
     if (skills.length > 4) {
       // 0から数えるので「 > 4 」と表記する
-      Fluttertoast.showToast(msg: 'スキルは最大5個までしか保存できません');
+      Fluttertoast.showToast(
+        msg: 'スキルは最大5個までしか保存できません',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
       return;
     }
 

@@ -66,80 +66,7 @@ class SettingsPage extends ConsumerWidget {
                     const SizedBox(height: 16),
                     // ゲストログインは非表示（要望）
                     const SizedBox(height: 8),
-                    // GitHub連携（匿名や既存アカウントにGitHubを接続）
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          try {
-                            final link = ref.read(linkGithubProvider);
-                            final result = await link();
-                            if (result != null &&
-                                result.startsWith('migrate:')) {
-                              final parts = result.split(':');
-                              if (parts.length == 3) {
-                                final fromUid = parts[1];
-                                final toUid = parts[2];
-                                final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('確認'),
-                                        content: const Text(
-                                            '既存のGitHubアカウントが見つかりました。このアカウントに切り替えてゲストのデータを引き継ぎますか？'),
-                                        actions: [
-                                          TextButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(false),
-                                              child: const Text('キャンセル')),
-                                          FilledButton(
-                                              onPressed: () =>
-                                                  Navigator.of(ctx).pop(true),
-                                              child: const Text('引き継ぐ')),
-                                        ],
-                                      ),
-                                    ) ??
-                                    false;
-                                if (confirm) {
-                                  final migrate =
-                                      ref.read(migrateGuestDataProvider);
-                                  await migrate(fromUid: fromUid, toUid: toUid);
-                                }
-                              }
-                            } else {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('GitHub連携が完了しました')),
-                                );
-                              }
-                            }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(mapExceptionToMessage(e))),
-                              );
-                            }
-                          }
-                        },
-                        icon: Image.asset(
-                          'assets/ui_image/github-mark-white.png',
-                          height: 20,
-                          fit: BoxFit.contain,
-                        ),
-                        label: const Text(
-                          'GitHub連携',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          textStyle: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
+                    // GitHub連携は非表示（要望）
                     const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
@@ -319,7 +246,11 @@ class SettingsPage extends ConsumerWidget {
                         ref.invalidate(activitiesProvider);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('アクティビティ履歴を削除しました')),
+                            const SnackBar(
+                              content: Text('アクティビティ履歴を削除しました'),
+                              behavior: SnackBarBehavior.floating,
+                              duration: Duration(seconds: 2),
+                            ),
                           );
                         }
                       },
@@ -363,6 +294,17 @@ class SettingsPage extends ConsumerWidget {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                'Animation "Sample Loaders" by Bobbeh (Rive Marketplace, CC BY)',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).hintColor,
+                ),
+              ),
             ),
           ],
         ),

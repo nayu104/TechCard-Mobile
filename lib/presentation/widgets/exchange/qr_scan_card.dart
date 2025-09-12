@@ -63,7 +63,15 @@ class QrScanCard extends ConsumerWidget {
 
                             if (normalized.trim().isEmpty) {
                               // Debug logging removed for production
-                              await Fluttertoast.showToast(msg: '無効なQRコードです');
+                              await Fluttertoast.showToast(
+                                msg: '無効なQRコードです',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                backgroundColor:
+                                    Colors.black.withValues(alpha: 0.8),
+                                textColor: Colors.white,
+                                fontSize: 14,
+                              );
                               continue;
                             }
 
@@ -132,7 +140,14 @@ class QrScanCard extends ConsumerWidget {
       await _searchByGithub(context, ref, data);
     } catch (e) {
       // Debug logging removed for production
-      await Fluttertoast.showToast(msg: 'QRコードの処理に失敗しました: $e');
+      await Fluttertoast.showToast(
+        msg: 'QRコードの処理に失敗しました: $e',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     }
   }
 
@@ -168,11 +183,25 @@ class QrScanCard extends ConsumerWidget {
         );
       } else {
         // Debug logging removed for production
-        await Fluttertoast.showToast(msg: 'ユーザーが見つかりませんでした');
+        await Fluttertoast.showToast(
+          msg: 'ユーザーが見つかりませんでした',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black.withValues(alpha: 0.8),
+          textColor: Colors.white,
+          fontSize: 14,
+        );
       }
     } catch (e) {
       // Debug logging removed for production
-      await Fluttertoast.showToast(msg: '検索に失敗しました: $e');
+      await Fluttertoast.showToast(
+        msg: '検索に失敗しました: $e',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     }
   }
 }

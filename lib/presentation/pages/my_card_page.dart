@@ -14,12 +14,16 @@ import '../widgets/my_card/activities_list.dart';
 import '../widgets/my_card/profile_header_card.dart';
 import 'edit_profile_page.dart';
 import '../widgets/my_card/stat_card.dart';
+import '../widgets/common/rive_loader.dart';
 import '../widgets/my_card/exchange_map_banner.dart';
 import '../widgets/pills.dart';
 import '../widgets/skills/editable_skills.dart';
 
 /// マイ名刺ページ。
 /// プロフィールの編集/表示、QR表示、活動ログの一覧を提供する。
+final myCardRefreshingProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
+
 class MyCardPage extends ConsumerWidget {
   const MyCardPage({super.key});
 
@@ -39,7 +43,13 @@ class MyCardPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: RiveLoader(
+            assetPath: 'assets/sample_loaders.riv',
+            animationName: 'Animation 1',
+            size: 64,
+          ),
+        ),
         error: (e, _) => const Center(child: Text('読み込みに失敗しました')),
         data: (profile) {
           final controllerName =
@@ -49,15 +59,21 @@ class MyCardPage extends ConsumerWidget {
           final controllerMessage =
               TextEditingController(text: profile?.message ?? '');
 
+          final isRefreshing = ref.watch(myCardRefreshingProvider);
           return Stack(
             children: [
               RefreshIndicator(
+                color: Colors.transparent,
+                backgroundColor: Colors.transparent,
                 onRefresh: () async {
+                  ref.read(myCardRefreshingProvider.notifier).state = true;
                   try {
                     ref.invalidate(activitiesProvider);
                     ref.invalidate(monthlyExchangeCountProvider);
                     await ref.read(activitiesProvider.future);
-                  } catch (_) {}
+                  } finally {
+                    ref.read(myCardRefreshingProvider.notifier).state = false;
+                  }
                 },
                 child: ListView(
                   padding: const EdgeInsets.all(16),
@@ -195,6 +211,21 @@ class MyCardPage extends ConsumerWidget {
                   ],
                 ),
               ),
+
+              // プルリフレッシュ時のRiveローダーを上部に重ねる
+              if (isRefreshing)
+                Positioned(
+                  top: 8,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: RiveLoader(
+                      assetPath: 'assets/sample_loaders.riv',
+                      animationName: 'Animation 1',
+                      size: 36,
+                    ),
+                  ),
+                ),
 
               // 編集モード時のオーバーレイ（Webでも確実に前面に出し、背景タップ/スワイプで閉じられる）
               if (isEditing)
@@ -412,7 +443,14 @@ class MyCardPage extends ConsumerWidget {
     try {
       final saveFunction = ref.read(firebaseUpdateProfileProvider);
       await saveFunction(updated);
-      await Fluttertoast.showToast(msg: '保存しました');
+      await Fluttertoast.showToast(
+        msg: '保存しました',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
       ref.invalidate(firebaseProfileProvider);
       ref.read(editingSkillsProvider.notifier).state = const [];
       ref.read(isEditingProvider.notifier).state = false;
@@ -420,7 +458,14 @@ class MyCardPage extends ConsumerWidget {
       // ADDED COMMENT: 失敗時は編集モードを維持し、明確な文言で通知
       final msg =
           (e is ArgumentError) ? 'ひとことは50文字以内、ユーザーIDは英数アンダースコアのみ' : '保存に失敗しました';
-      await Fluttertoast.showToast(msg: msg);
+      await Fluttertoast.showToast(
+        msg: msg,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
       ref.read(isEditingProvider.notifier).state = true;
     }
   }

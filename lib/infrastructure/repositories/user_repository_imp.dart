@@ -254,6 +254,52 @@ class UserRepositoryImpl {
 
       await batch.commit();
 
+      // 互いの contacts サブコレクションに名刺を追加/更新
+      try {
+        // 送信者/受信者の公開プロフィールを取得
+        final senderPub =
+            await _db.collection('public_profiles').doc(senderUserId).get();
+        final receiverPub =
+            await _db.collection('public_profiles').doc(receiverUserId).get();
+
+        Future<void> upsertContact({
+          required String ownerUid,
+          required String contactDocId,
+          required DocumentSnapshot<Map<String, dynamic>> source,
+        }) async {
+          if (!source.exists || source.data() == null) return;
+          final m = source.data()!;
+          final githubUsername = _extractGithubUsername(m['github'] as String?);
+          await _db
+              .collection('users')
+              .doc(ownerUid)
+              .collection('contacts')
+              .doc(contactDocId)
+              .set({
+            'name': (m['name'] ?? '').toString(),
+            'userId': (m['userId'] ?? '').toString(),
+            'bio': (m['message'] ?? '').toString(),
+            'githubUsername': githubUsername.isEmpty ? null : githubUsername,
+            'skills': (m['skills'] is List) ? m['skills'] : const [],
+            'avatarUrl': (m['avatar'] ?? '').toString(),
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+
+        await upsertContact(
+          ownerUid: receiverUid,
+          contactDocId: senderUserId,
+          source: senderPub,
+        );
+        await upsertContact(
+          ownerUid: senderUid,
+          contactDocId: receiverUserId,
+          source: receiverPub,
+        );
+      } catch (_) {
+        // 名刺作成に失敗しても致命ではないため継続
+      }
+
       // 位置情報を取得して交換記録を保存
       await _saveExchangeWithLocation(
         senderUid: senderUid,

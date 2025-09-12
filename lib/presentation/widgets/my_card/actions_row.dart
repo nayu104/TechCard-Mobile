@@ -31,7 +31,15 @@ class ActionsRow extends StatelessWidget {
             // @や不可視文字を除去してコピー
             final cleanHandle = normalizeUserId(handle);
             await Clipboard.setData(ClipboardData(text: cleanHandle));
-            await Fluttertoast.showToast(msg: 'コピーしました');
+            // 本番向け: 目立ちすぎない下部トーストに変更
+            await Fluttertoast.showToast(
+              msg: 'コピーしました',
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.black.withValues(alpha: 0.8),
+              textColor: Colors.white,
+              fontSize: 14,
+            );
           },
         ),
       ),

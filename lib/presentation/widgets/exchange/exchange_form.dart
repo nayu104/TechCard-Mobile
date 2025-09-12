@@ -69,14 +69,28 @@ class _ExchangeFormState extends ConsumerState<ExchangeForm> {
         onPressed: () async {
           final searchText = _controller.text.trim();
           if (searchText.isEmpty) {
-            await Fluttertoast.showToast(msg: 'ユーザーIDまたはGitHub名を入力してください');
+            await Fluttertoast.showToast(
+              msg: 'ユーザーIDまたはGitHub名を入力してください',
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.black.withValues(alpha: 0.8),
+              textColor: Colors.white,
+              fontSize: 14,
+            );
             return;
           }
 
           if (_searchType == SearchType.userId) {
             // ユーザーID検索の場合はプレビューダイアログを表示
             if (!isValidUserId(searchText)) {
-              await Fluttertoast.showToast(msg: 'ユーザーIDが不正です');
+              await Fluttertoast.showToast(
+                msg: 'ユーザーIDが不正です',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.black.withValues(alpha: 0.8),
+                textColor: Colors.white,
+                fontSize: 14,
+              );
               return;
             }
             showDialog<void>(
@@ -86,7 +100,14 @@ class _ExchangeFormState extends ConsumerState<ExchangeForm> {
           } else {
             // GitHub名検索の場合は従来通り直接追加
             final result = await exchange.exchangeByGithubUsername(searchText);
-            await Fluttertoast.showToast(msg: result.message);
+            await Fluttertoast.showToast(
+              msg: result.message,
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.black.withValues(alpha: 0.8),
+              textColor: Colors.white,
+              fontSize: 14,
+            );
             if (result.added) {
               ref.invalidate(contactsProvider);
               ref.invalidate(firebaseProfileProvider);

@@ -39,7 +39,14 @@ class _NfcCardState extends ConsumerState<NfcCard> {
   /// 自分の名刺をNFCで送信開始
   Future<void> _startNfcSending() async {
     if (!_isNfcAvailable) {
-      await Fluttertoast.showToast(msg: 'NFCが利用できません');
+      await Fluttertoast.showToast(
+        msg: 'NFCが利用できません',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
       return;
     }
 
@@ -56,23 +63,65 @@ class _NfcCardState extends ConsumerState<NfcCard> {
             if (profile != null) {
               final nfcService = ref.read(nfcServiceProvider);
               await nfcService.startNfcTagWriting(profile);
-              await Fluttertoast.showToast(msg: 'NFC送信開始: ${profile.name}');
+              await Fluttertoast.showToast(
+                msg: 'NFC送信開始: ${profile.name}',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.black.withValues(alpha: 0.8),
+                textColor: Colors.white,
+                fontSize: 14,
+              );
             } else {
-              await Fluttertoast.showToast(msg: 'プロフィールが見つかりません');
+              await Fluttertoast.showToast(
+                msg: 'プロフィールが見つかりません',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                backgroundColor: Colors.black.withValues(alpha: 0.8),
+                textColor: Colors.white,
+                fontSize: 14,
+              );
             }
           } else {
-            await Fluttertoast.showToast(msg: 'ログインが必要です');
+            await Fluttertoast.showToast(
+              msg: 'ログインが必要です',
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+              backgroundColor: Colors.black.withValues(alpha: 0.8),
+              textColor: Colors.white,
+              fontSize: 14,
+            );
           }
         },
         loading: () async {
-          await Fluttertoast.showToast(msg: '認証中です...');
+          await Fluttertoast.showToast(
+            msg: '認証中です...',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.black.withValues(alpha: 0.8),
+            textColor: Colors.white,
+            fontSize: 14,
+          );
         },
         error: (Object error, StackTrace stack) async {
-          await Fluttertoast.showToast(msg: '認証エラー: $error');
+          await Fluttertoast.showToast(
+            msg: '認証エラー: $error',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.black.withValues(alpha: 0.8),
+            textColor: Colors.white,
+            fontSize: 14,
+          );
         },
       );
     } on Exception catch (e) {
-      await Fluttertoast.showToast(msg: 'NFC送信エラー: $e');
+      await Fluttertoast.showToast(
+        msg: 'NFC送信エラー: $e',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -85,7 +134,14 @@ class _NfcCardState extends ConsumerState<NfcCard> {
   /// NFCから名刺を受信開始
   Future<void> _startNfcReceiving() async {
     if (!_isNfcAvailable) {
-      await Fluttertoast.showToast(msg: 'NFCが利用できません');
+      await Fluttertoast.showToast(
+        msg: 'NFCが利用できません',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
       return;
     }
 
@@ -113,16 +169,43 @@ class _NfcCardState extends ConsumerState<NfcCard> {
         final ok = await addUc(contact);
         if (ok) {
           await Fluttertoast.showToast(
-              msg: '名刺を受信しました: ${receivedProfile.name}');
+            msg: '名刺を受信しました: ${receivedProfile.name}',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.black.withValues(alpha: 0.8),
+            textColor: Colors.white,
+            fontSize: 14,
+          );
           ref.invalidate(contactsProvider);
         } else {
-          await Fluttertoast.showToast(msg: 'すでに追加済みです');
+          await Fluttertoast.showToast(
+            msg: 'すでに追加済みです',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.black.withValues(alpha: 0.8),
+            textColor: Colors.white,
+            fontSize: 14,
+          );
         }
       } else {
-        await Fluttertoast.showToast(msg: '名刺の受信に失敗しました');
+        await Fluttertoast.showToast(
+          msg: '名刺の受信に失敗しました',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.black.withValues(alpha: 0.8),
+          textColor: Colors.white,
+          fontSize: 14,
+        );
       }
     } on Exception catch (e) {
-      await Fluttertoast.showToast(msg: 'NFC受信エラー: $e');
+      await Fluttertoast.showToast(
+        msg: 'NFC受信エラー: $e',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -139,7 +222,14 @@ class _NfcCardState extends ConsumerState<NfcCard> {
     setState(() {
       _isNfcActive = false;
     });
-    await Fluttertoast.showToast(msg: 'NFCセッションを停止しました');
+    await Fluttertoast.showToast(
+      msg: 'NFCセッションを停止しました',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.black.withValues(alpha: 0.8),
+      textColor: Colors.white,
+      fontSize: 14,
+    );
   }
 
   @override

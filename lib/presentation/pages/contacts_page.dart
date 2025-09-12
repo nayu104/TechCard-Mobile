@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
 import '../widgets/contacts/contact_list_item.dart';
 import '../widgets/contacts/empty_state.dart';
+import '../widgets/common/rive_loader.dart';
 // ...existing code...
 
 /// 名刺一覧ページ。
@@ -19,7 +20,6 @@ class ContactsPage extends ConsumerStatefulWidget {
 class _ContactsPageState extends ConsumerState<ContactsPage> {
   final Map<String, bool> _expanded = {};
   var _showAll = false; // 全件表示フラグ
-  bool _isRefreshing = false; // リフレッシュ状態
 
   /// 「もっと見る」ボタンを構築
   Widget _buildLoadMoreButton(int totalCount) {
@@ -68,23 +68,15 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
     final contactsAsync = ref.watch(firebaseContactsProvider);
     return RefreshIndicator(
       onRefresh: () async {
-        setState(() => _isRefreshing = true);
-        try {
-          ref.invalidate(firebaseContactsProvider);
-          await ref.read(firebaseContactsProvider.future);
-        } finally {
-          if (mounted) setState(() => _isRefreshing = false);
-        }
+        ref.invalidate(firebaseContactsProvider);
+        await ref.read(firebaseContactsProvider.future);
       },
       child: contactsAsync.when(
         loading: () => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('名刺を読み込み中...'),
-            ],
+          child: RiveLoader(
+            assetPath: 'assets/sample_loaders.riv',
+            animationName: 'Animation 1',
+            size: 64,
           ),
         ),
         error: (_, __) => Center(
@@ -209,7 +201,13 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
         await ref.read(friendRequestsProvider.future);
       },
       child: requestsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: RiveLoader(
+            assetPath: 'assets/sample_loaders.riv',
+            animationName: 'Animation 1',
+            size: 48,
+          ),
+        ),
         error: (e, _) => Center(child: Text('読み込みに失敗しました: $e')),
         data: (requests) {
           if (requests.isEmpty) {

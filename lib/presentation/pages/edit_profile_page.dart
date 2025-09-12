@@ -111,12 +111,26 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     try {
       final saveFunction = ref.read(firebaseUpdateProfileProvider);
       await saveFunction(updated);
-      await Fluttertoast.showToast(msg: '保存しました');
+      await Fluttertoast.showToast(
+        msg: '保存しました',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
       ref.invalidate(firebaseProfileProvider);
       ref.read(editingSkillsProvider.notifier).state = const [];
       if (mounted) Navigator.of(context).maybePop();
     } on Exception catch (_) {
-      await Fluttertoast.showToast(msg: '保存に失敗しました');
+      await Fluttertoast.showToast(
+        msg: '保存に失敗しました',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withValues(alpha: 0.8),
+        textColor: Colors.white,
+        fontSize: 14,
+      );
     }
   }
 }

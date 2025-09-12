@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 /*
 /// 名刺が0件のときのプレースホルダ。交換画面への誘導ボタンを持つ。
@@ -33,7 +31,7 @@ class ContactsEmptyState extends StatelessWidget {
 }
 */
 
-class ContactsEmptyState extends StatelessWidget{
+class ContactsEmptyState extends StatelessWidget {
   final VoidCallback onTapExchange; //名刺を交換
   final VoidCallback? onTapSeedDemo; //でも名刺交換
 
@@ -45,28 +43,30 @@ class ContactsEmptyState extends StatelessWidget{
 
   @override
   //UI　どのように描画するか
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.description_outlined, size: 72), //アイコン
+          Image.asset('assets/ui_image/no_card.png',
+              width: 180), // アイコンをアセットに変更
           const SizedBox(height: 12),
           const Text('まだ名刺がありません'),
           const SizedBox(height: 16),
-          ElevatedButton(//メインボタン
+          ElevatedButton(
+            //メインボタン
             onPressed: onTapExchange,
             child: const Text('名刺を交換する'),
           ),
           //開発時だけのボタン
-          if(onTapSeedDemo != null) ...[
+          if (onTapSeedDemo != null) ...[
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: onTapSeedDemo,
               child: const Text('でも名刺を追加する'),
             ),
           ],
-         ],
+        ],
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
+import 'package:rive/rive.dart';
 
 import 'pages/contacts_page.dart';
 import 'pages/exchange_page.dart';
@@ -47,7 +49,18 @@ class AppShell extends ConsumerWidget {
                 return _buildWelcomeMessage(ref, user.uid);
               }
             },
-            loading: () => const SizedBox.shrink(),
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: RiveAnimation.asset(
+                  'assets/title.riv',
+                  fit: BoxFit.contain,
+                  animations: const ['Animation 1'],
+                ),
+              ),
+            ),
             error: (_, __) => const SizedBox.shrink(),
           ),
         ],
@@ -76,8 +89,8 @@ class AppShell extends ConsumerWidget {
             ),
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          splashFactory: NoSplash.splashFactory, // タップ時フラッシュ無効
-          highlightColor: Colors.transparent, // ハイライト無効
+          splashFactory: NoSplash.splashFactory,
+          highlightColor: Colors.transparent,
         ),
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
@@ -86,25 +99,43 @@ class AppShell extends ConsumerWidget {
             ref.read(bottomNavProvider.notifier).state = value;
             // vibrate();
           },
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.credit_card_outlined),
-              activeIcon: Icon(Icons.credit_card),
+              icon: _NavIcon(
+                key: const ValueKey('nav-0'),
+                icon: currentIndex == 0
+                    ? Icons.credit_card
+                    : Icons.credit_card_outlined,
+                selected: currentIndex == 0,
+              ),
               label: '名刺',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.view_list_outlined),
-              activeIcon: Icon(Icons.view_list),
+              icon: _NavIcon(
+                key: const ValueKey('nav-1'),
+                icon: currentIndex == 1
+                    ? Icons.view_list
+                    : Icons.view_list_outlined,
+                selected: currentIndex == 1,
+              ),
               label: '一覧',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_2_outlined),
-              activeIcon: Icon(Icons.qr_code_2),
+              icon: _NavIcon(
+                key: const ValueKey('nav-2'),
+                icon: currentIndex == 2
+                    ? Icons.qr_code_2
+                    : Icons.qr_code_2_outlined,
+                selected: currentIndex == 2,
+              ),
               label: '交換',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
+              icon: _NavIcon(
+                key: const ValueKey('nav-3'),
+                icon: Icons.settings_outlined,
+                selected: false,
+              ),
               label: '設定',
             ),
           ],
@@ -125,6 +156,16 @@ class AppShell extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              SizedBox(
+                width: 80,
+                height: 80,
+                child: RiveAnimation.asset(
+                  'assets/title.riv',
+                  fit: BoxFit.contain,
+                  animations: const ['Animation 1'],
+                ),
+              ),
+              const SizedBox(width: 0),
               Text(
                 userName,
                 style: const TextStyle(fontWeight: FontWeight.w600),
@@ -133,8 +174,105 @@ class AppShell extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const SizedBox.shrink(),
+      loading: () => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: RiveAnimation.asset(
+            'assets/title.riv',
+            fit: BoxFit.contain,
+            animations: const ['Animation 1'],
+          ),
+        ),
+      ),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _RiveIcon extends StatefulWidget {
+  const _RiveIcon({required this.size});
+  final double size;
+
+  @override
+  State<_RiveIcon> createState() => _RiveIconState();
+}
+
+class _RiveIconState extends State<_RiveIcon> {
+  Artboard? _artboard;
+  static bool _riveInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRive();
+  }
+
+  Future<void> _loadRive() async {
+    try {
+      if (!_riveInitialized) {
+        await RiveFile.initialize();
+        _riveInitialized = true;
+      }
+      final data = await rootBundle.load('assets/my.riv');
+      final file = RiveFile.import(data);
+      final board = file.mainArtboard;
+      if (mounted) {
+        setState(() => _artboard = board);
+      }
+    } catch (_) {
+      // noop: 表示は空で続行
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_artboard == null) {
+      return SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: const SizedBox.shrink(),
+      );
+    }
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: Rive(artboard: _artboard!, fit: BoxFit.contain),
+    );
+  }
+}
+
+// _RiveAsset は RiveAnimation.asset に置き換えました
+
+/// シンプルなタブアイコンのアニメーション（フラッシュ無効・タップ感はスケール）
+class _NavIcon extends StatelessWidget {
+  const _NavIcon({super.key, required this.icon, required this.selected});
+  final IconData icon;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    // 設定アイコンだけ一回転の演出を加える
+    final isCog = icon == Icons.settings || icon == Icons.settings_outlined;
+    final rotationTurns = selected && isCog ? 1.0 : 0.0;
+
+    return AnimatedRotation(
+      duration: isCog
+          ? const Duration(milliseconds: 380)
+          : const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      turns: rotationTurns,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        scale: selected ? 1.12 : 1.0,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 160),
+          opacity: selected ? 1.0 : 0.85,
+          child: Icon(icon),
+        ),
+      ),
     );
   }
 }
